@@ -4,6 +4,8 @@ import {
   RegisterBody,
   LoginOptions,
   LoginBody,
+  VerifyBody,
+  VerifyOptions,
 } from "./types";
 
 const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -42,6 +44,21 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       }
       const token = fastify.generateJwt(email);
       return reply.status(200).send({ ...user.toObject(), token });
+    }
+  );
+
+  fastify.post<{ Body: VerifyBody }>(
+    "/verify",
+    VerifyOptions,
+    async function (request, reply) {
+      const { name, email, authToken, captchaToken } = request.body;
+      console.log(name, email, authToken, captchaToken);
+      return { verify: true };
+      // const uid = await fastify.verifyFbAuth(token);
+      // if (!uid) return reply.status(401).send({ message: "Unauthorized" });
+      // console.log("post verify", uid);
+      // const jwtToken = fastify.generateJwt(uid);
+      // return reply.status(201).send({ token: jwtToken, uid, name: "addname" });
     }
   );
 };
