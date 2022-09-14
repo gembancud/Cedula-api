@@ -14,3 +14,13 @@ export const UserSchema = new Schema<User>({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+export interface Registration {
+  _id: string;
+  applicant_name: string;
+  applicant_email: string;
+  applicant_phone: string;
+  applicant_address: string;
+  applicant_birthdate: string;
+  createdAt: Date;
+}
