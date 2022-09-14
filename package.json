@@ -19,16 +19,22 @@
   "license": "ISC",
   "dependencies": {
     "@fastify/autoload": "^5.0.0",
+    "@fastify/cors": "^8.1.0",
     "@fastify/jwt": "^6.3.2",
     "@fastify/request-context": "^4.0.0",
     "@fastify/sensible": "^5.0.0",
     "@sinclair/typebox": "^0.24.35",
     "@types/fastify-jwt": "^0.8.1",
+    "cloudinary": "^1.31.0",
     "fastify": "^4.0.0",
     "fastify-cli": "^5.4.1",
+    "fastify-formidable": "^3.0.0",
     "fastify-jwt": "^4.2.0",
+    "fastify-multer": "^2.0.3",
     "fastify-plugin": "^4.0.0",
     "fastify-request-context": "^2.3.0",
+    "firebase": "^9.9.4",
+    "firebase-admin": "^11.0.1",
     "mongoose": "^6.5.4"
   },
   "devDependencies": {
