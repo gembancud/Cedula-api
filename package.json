@@ -30,11 +30,11 @@
     "fastify-cli": "^5.4.1",
     "fastify-formidable": "^3.0.0",
     "fastify-jwt": "^4.2.0",
-    "fastify-multer": "^2.0.3",
     "fastify-plugin": "^4.0.0",
     "fastify-request-context": "^2.3.0",
     "firebase": "^9.9.4",
     "firebase-admin": "^11.0.1",
+    "hcaptcha": "^0.1.1",
     "mongoose": "^6.5.4"
   },
   "devDependencies": {

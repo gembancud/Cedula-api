@@ -6,11 +6,16 @@ import {
   LoginBody,
   VerifyBody,
   VerifyOptions,
+  UploadBody,
+  UploadOptions,
 } from "./types";
+// import { uploadPicture } from "../../utils/cloudinary";
+import { hcaptchaVerify } from "../../utils/hcaptcha";
+import { genCloudinaryRequest } from "../../utils/cloudinary";
 
 const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.get("/", async function (request, reply) {
-    return "this is an example";
+  fastify.get("/", async (request, reply) => {
+    return { hello: "world" };
   });
   fastify.post<{ Body: RegisterBody }>(
     "/register",
@@ -28,7 +33,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         }
       });
 
-      const token = fastify.generateJwt(email);
+      const token = fastify.generateJwt(email, "");
       return reply.status(201).send({ ...user.toObject(), token });
     }
   );
@@ -42,7 +47,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!user) {
         return reply.status(404).send({ message: "User not found" });
       }
-      const token = fastify.generateJwt(email);
+      const token = fastify.generateJwt(email, "");
       return reply.status(200).send({ ...user.toObject(), token });
     }
   );
@@ -52,13 +57,59 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     VerifyOptions,
     async function (request, reply) {
       const { name, email, authToken, captchaToken } = request.body;
-      console.log(name, email, authToken, captchaToken);
-      return { verify: true };
-      // const uid = await fastify.verifyFbAuth(token);
-      // if (!uid) return reply.status(401).send({ message: "Unauthorized" });
-      // console.log("post verify", uid);
-      // const jwtToken = fastify.generateJwt(uid);
-      // return reply.status(201).send({ token: jwtToken, uid, name: "addname" });
+      const uid = await fastify.verifyFbAuth(authToken);
+      if (!uid)
+        return reply
+          .status(401)
+          .send({ message: "Firebase user Unauthorized" });
+
+      const captcha = await hcaptchaVerify(captchaToken);
+      if (!captcha)
+        return reply.status(401).send({ message: "Captcha Unauthorized" });
+
+      const evaluator = await fastify.db.Evaluator.aggregate([
+        { $sample: { size: 1 } },
+      ]);
+
+      const existing = await fastify.db.Registration.findOne({ email });
+      if (existing)
+        return reply.status(409).send({ message: "Registration exists" });
+      const registration = new fastify.db.Registration({
+        applicant_name: name,
+        applicant_email: email,
+        fbuid: uid,
+        evaluator: evaluator[0].email,
+      });
+
+      registration.save((err, user) => {
+        if (err || !user) {
+          return reply.internalServerError("Creating Registration Failed");
+        }
+      });
+
+      const cloudinary = await genCloudinaryRequest();
+      return reply.status(201).send({
+        ...registration.toObject(),
+        cloudinary,
+      });
+    }
+  );
+
+  fastify.post<{ Body: UploadBody }>(
+    "/upload",
+    UploadOptions,
+    async function (request, reply) {
+      const { email, documents } = request.body;
+      const registration = await fastify.db.Registration.findOneAndUpdate(
+        { email },
+        { $push: { documents } }
+      );
+      if (!registration) return reply.badRequest("Upload failed");
+
+      const newRegistration = await fastify.db.Registration.findOne({ email });
+
+      console.log("documents", documents);
+      return reply.status(201).send({ ...newRegistration!.toObject() });
     }
   );
 };

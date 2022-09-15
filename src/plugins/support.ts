@@ -1,13 +1,21 @@
 import fp from "fastify-plugin";
-import { User, UserSchema } from "../schemas/index";
+import {
+  Evaluator,
+  EvaluatorSchema,
+  Registration,
+  RegistrationSchema,
+  User,
+  UserSchema,
+} from "../schemas/index";
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
 import { fastifyRequestContextPlugin } from "@fastify/request-context";
 
-import { auth } from "../utils/initFirebase";
+// import fastifyMultipart from "@fastify/multipart";
+// import multer from "fastify-multer";
 
-import multer from "fastify-multer";
+import { auth } from "../utils/initFirebase";
 
 export interface SupportPluginOptions {
   // Specify Support plugin options here
@@ -29,17 +37,19 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     },
   });
 
-  fastify.decorate("generateJwt", (email: string) => {
-    return fastify.jwt.sign({ email });
+  fastify.decorate("generateJwt", (email: string, idtoken: string) => {
+    return fastify.jwt.sign({ email, idtoken });
   });
 
   const db = await mongoose
-    .connect("mongodb://root:example@localhost:27017", {
-      dbName: "cedula",
+    .connect(process.env.MONGODB_CONN!, {
+      dbName: process.env.MONGODB_DB,
     })
     .then((conn) => {
       fastify.decorate("db", {
         User: conn.model("User", UserSchema),
+        Registration: conn.model("Registration", RegistrationSchema),
+        Evaluator: conn.model("Evaluator", EvaluatorSchema),
       });
       return conn;
     })
@@ -61,17 +71,23 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     }
   });
 
-  fastify.register(multer.contentParser);
+  // fastify.register(fastifyMultipart, { attachFieldsToBody: "keyValues" });
+  // fastify.register(multer.contentParser);
 });
 
 // When using .decorate you have to specify added properties for Typescript
 declare module "fastify" {
   export interface FastifyInstance {
-    generateJwt: (email: string) => string;
+    generateJwt: (email: string, idtoken: string) => string;
     verifyFbAuth: (token: string) => string;
     db: {
       User: mongoose.Model<User>;
+      Registration: mongoose.Model<Registration>;
+      Evaluator: mongoose.Model<Evaluator>;
     };
+  }
+  interface FastifyRequest {
+    // files: any;
   }
 }
 
