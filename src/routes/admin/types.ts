@@ -1,28 +1,28 @@
 import { Type, Static } from "@sinclair/typebox";
 
-const EvaluatorRequest = Type.Object({
+const EvaluatorPostRequest = Type.Object({
   email: Type.String({ format: "email" }),
   password: Type.String(),
   credential: Type.String(),
 });
 
-const DeleteEvaluatorRequest = Type.Object({
+const EvaluatorDeleteRequest = Type.Object({
   email: Type.String({ format: "email" }),
   password: Type.String(),
 });
 
-export const EvaluatorOptions = {
+export const EvaluatorPostOptions = {
   schema: {
-    body: EvaluatorRequest,
+    body: EvaluatorPostRequest,
     response: {
       201: Type.String(),
     },
   },
 };
 
-export const DeleteEvaluatorOptions = {
+export const EvaluatorDeleteOptions = {
   schema: {
-    body: DeleteEvaluatorRequest,
+    body: EvaluatorDeleteRequest,
     response: {
       200: Type.Object({
         message: Type.String(),
@@ -31,5 +31,5 @@ export const DeleteEvaluatorOptions = {
   },
 };
 
-export type EvaluatorBody = Static<typeof EvaluatorRequest>;
-export type DeleteEvaluatorBody = Static<typeof DeleteEvaluatorRequest>;
+export type EvaluatorPostBody = Static<typeof EvaluatorPostRequest>;
+export type EvaluatorDeleteBody = Static<typeof EvaluatorDeleteRequest>;

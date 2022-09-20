@@ -1,20 +1,10 @@
 import { Type, Static } from "@sinclair/typebox";
 
-const RegisterRequest = Type.Object({
+const RegisterPostRequest = Type.Object({
   name: Type.String(),
   email: Type.String({ format: "email" }),
-});
-
-const LoginRequest = Type.Object({
-  name: Type.String(),
-  email: Type.String({ format: "email" }),
-});
-
-const VerifyRequest = Type.Object({
-  name: Type.String(),
-  email: Type.String({ format: "email" }),
+  link: Type.String(),
   captchaToken: Type.String(),
-  authToken: Type.String(),
 });
 
 const UploadRequest = Type.Object({
@@ -22,15 +12,10 @@ const UploadRequest = Type.Object({
   documents: Type.Array(Type.String()),
 });
 
-const AuthResponse = Type.Object({
-  token: Type.String(),
-  name: Type.String(),
-  email: Type.String({ format: "email" }),
-});
-
-const VerifyResponse = Type.Object({
+const RegisterPostResponse = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
+  applicant_link: Type.String(),
   fbuid: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),
@@ -47,6 +32,19 @@ const VerifyResponse = Type.Object({
   }),
 });
 
+const RegisterGetResponse = Type.Object({
+  applicant_name: Type.String(),
+  applicant_email: Type.String({ format: "email" }),
+  applicant_link: Type.String(),
+  fbuid: Type.String(),
+  createdAt: Type.String(),
+  updatedAt: Type.String(),
+  documents: Type.Array(Type.String()),
+  status: Type.String(),
+  evaluation: Type.String(),
+  evaluator: Type.String(),
+});
+
 const UploadResponse = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
@@ -58,29 +56,20 @@ const UploadResponse = Type.Object({
   evaluation: Type.String(),
   evaluator: Type.String(),
 });
-export const RegisterOptions = {
+
+export const RegisterPostOptions = {
   schema: {
-    body: RegisterRequest,
+    body: RegisterPostRequest,
     response: {
-      201: AuthResponse,
+      201: RegisterPostResponse,
     },
   },
 };
 
-export const LoginOptions = {
+export const RegisterGetOptions = {
   schema: {
-    body: LoginRequest,
     response: {
-      200: AuthResponse,
-    },
-  },
-};
-
-export const VerifyOptions = {
-  schema: {
-    body: VerifyRequest,
-    response: {
-      201: VerifyResponse,
+      201: RegisterGetResponse,
     },
   },
 };
@@ -93,7 +82,5 @@ export const UploadOptions = {
   },
 };
 
-export type RegisterBody = Static<typeof RegisterRequest>;
-export type LoginBody = Static<typeof LoginRequest>;
-export type VerifyBody = Static<typeof VerifyRequest>;
+export type RegisterBody = Static<typeof RegisterPostRequest>;
 export type UploadBody = Static<typeof UploadRequest>;

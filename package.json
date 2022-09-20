@@ -35,7 +35,8 @@
     "firebase": "^9.9.4",
     "firebase-admin": "^11.0.1",
     "hcaptcha": "^0.1.1",
-    "mongoose": "^6.5.4"
+    "mongoose": "^6.5.4",
+    "node-fetch": "^3.2.10"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",

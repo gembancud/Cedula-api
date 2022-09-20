@@ -28,6 +28,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
 
   fastify.register(fastifyCors, {
     origin: true,
+    exposedHeaders: "X-Total-Count",
   });
 
   fastify.register(fastifyJwt, {
@@ -67,7 +68,8 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
       return error;
     });
     if (decodedToken != null) {
-      return decodedToken.uid;
+      // console.log("VerifyfbAuth: ", decodedToken);
+      return decodedToken;
     }
   });
 
@@ -79,7 +81,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
 declare module "fastify" {
   export interface FastifyInstance {
     generateJwt: (email: string, idtoken: string) => string;
-    verifyFbAuth: (token: string) => string;
+    verifyFbAuth: (token: string) => any;
     db: {
       User: mongoose.Model<User>;
       Registration: mongoose.Model<Registration>;

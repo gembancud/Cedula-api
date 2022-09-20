@@ -1,9 +1,9 @@
 import { FastifyPluginAsync } from "fastify";
 import {
-  DeleteEvaluatorBody,
-  DeleteEvaluatorOptions,
-  EvaluatorBody,
-  EvaluatorOptions,
+  EvaluatorDeleteBody,
+  EvaluatorDeleteOptions,
+  EvaluatorPostBody,
+  EvaluatorPostOptions as EvaluatorPostOptions,
 } from "./types";
 
 const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -11,9 +11,9 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     return "this is admin";
   });
 
-  fastify.post<{ Body: EvaluatorBody }>(
+  fastify.post<{ Body: EvaluatorPostBody }>(
     "/evaluator",
-    EvaluatorOptions,
+    EvaluatorPostOptions,
     async function (request, reply) {
       const { email, password, credential } = request.body;
       if (password !== process.env.ADMIN_PASSWORD)
@@ -35,9 +35,9 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
-  fastify.delete<{ Body: DeleteEvaluatorBody }>(
+  fastify.delete<{ Body: EvaluatorDeleteBody }>(
     "/evaluator",
-    DeleteEvaluatorOptions,
+    EvaluatorDeleteOptions,
     async function (request, reply) {
       const { email, password } = request.body;
       if (password !== process.env.ADMIN_PASSWORD)

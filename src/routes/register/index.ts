@@ -1,67 +1,43 @@
 import { FastifyPluginAsync } from "fastify";
 import {
-  RegisterOptions,
   RegisterBody,
-  LoginOptions,
-  LoginBody,
-  VerifyBody,
-  VerifyOptions,
+  RegisterGetOptions,
+  RegisterPostOptions,
   UploadBody,
   UploadOptions,
 } from "./types";
-// import { uploadPicture } from "../../utils/cloudinary";
 import { hcaptchaVerify } from "../../utils/hcaptcha";
 import { genCloudinaryRequest } from "../../utils/cloudinary";
 
-const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.get("/", async (request, reply) => {
-    return { hello: "world" };
-  });
-  fastify.post<{ Body: RegisterBody }>(
-    "/register",
-    RegisterOptions,
-    async function (request, reply) {
-      const { email } = request.body;
-
-      const user = new fastify.db.User({
-        ...request.body,
-      });
-
-      user.save((err, user) => {
-        if (err || !user) {
-          fastify.httpErrors.createError();
-        }
-      });
-
-      const token = fastify.generateJwt(email, "");
-      return reply.status(201).send({ ...user.toObject(), token });
-    }
-  );
-  fastify.post<{ Body: LoginBody }>(
-    "/login",
-    LoginOptions,
-    async function (request, reply) {
-      const { email } = request.body;
-      const user = await fastify.db.User.findOne({ email });
-
-      if (!user) {
-        return reply.status(404).send({ message: "User not found" });
+const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+  fastify.addHook("onRequest", async (request, reply) => {
+    try {
+      const token = request.headers.authorization;
+      if (!token) {
+        throw new Error("No token");
       }
-      const token = fastify.generateJwt(email, "");
-      return reply.status(200).send({ ...user.toObject(), token });
+      const authToken = fastify.verifyFbAuth(token);
+      if (!authToken)
+        throw new Error("Next Firebase Auth: Cookie not authorized");
+    } catch (err) {
+      reply.unauthorized();
     }
-  );
+  });
 
-  fastify.post<{ Body: VerifyBody }>(
-    "/verify",
-    VerifyOptions,
+  fastify.post<{ Body: RegisterBody }>(
+    "/",
+    RegisterPostOptions,
     async function (request, reply) {
-      const { name, email, authToken, captchaToken } = request.body;
-      const uid = await fastify.verifyFbAuth(authToken);
-      if (!uid)
-        return reply
-          .status(401)
-          .send({ message: "Firebase user Unauthorized" });
+      const { name, email, link, captchaToken } = request.body;
+      let authUser;
+      try {
+        const token = request.headers.authorization;
+        authUser = await fastify.verifyFbAuth(token!);
+      } catch (err) {
+        console.log(err);
+        return reply.status(401).send({ message: err });
+      }
+      console.log("OTEN: ", authUser);
 
       const captcha = await hcaptchaVerify(captchaToken);
       if (!captcha)
@@ -77,7 +53,8 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const registration = new fastify.db.Registration({
         applicant_name: name,
         applicant_email: email,
-        fbuid: uid,
+        applicant_link: link,
+        fbuid: authUser.uid,
         evaluator: evaluator[0].email,
       });
 
@@ -95,6 +72,23 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   );
 
+  fastify.get("/", RegisterGetOptions, async function (request, reply) {
+    let uid;
+    try {
+      const token = request.headers.authorization;
+      uid = await fastify.verifyFbAuth(token!).uid;
+    } catch (err) {
+      console.log(err);
+      return reply.status(401).send({ message: err });
+    }
+
+    const existing = await fastify.db.Registration.findOne({ fbuid: uid });
+    if (!existing)
+      return reply.status(409).send({ message: "Registration does not exist" });
+
+    return reply.status(201).send({ ...existing.toObject() });
+  });
+
   fastify.post<{ Body: UploadBody }>(
     "/upload",
     UploadOptions,
@@ -108,10 +102,9 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
       const newRegistration = await fastify.db.Registration.findOne({ email });
 
-      console.log("documents", documents);
       return reply.status(201).send({ ...newRegistration!.toObject() });
     }
   );
 };
 
-export default user;
+export default register;
