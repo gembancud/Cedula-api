@@ -1,5 +1,9 @@
 import { FastifyPluginAsync } from "fastify";
-import { VerifyGetOptions } from "./types";
+import {
+  VerifyGetOneOptions,
+  VerifyGetOneParams,
+  VerifyGetOptions,
+} from "./types";
 
 const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.addHook("onRequest", async (request, reply) => {
@@ -32,10 +36,36 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return { ...item.toObject(), id: item.applicant_email };
     });
     return reply
-      .header("X-Total-Count", objList.length)
+      .header("Content-Range", `0-9/${objList.length}`)
       .status(200)
       .send(objList);
   });
+
+  fastify.get<{ Params: VerifyGetOneParams }>(
+    "/:id",
+    VerifyGetOneOptions,
+    async function (request, reply) {
+      let authUser;
+      try {
+        const token = request.headers.authorization;
+        authUser = await fastify.verifyFbAuth(token!);
+      } catch (err) {
+        return reply.status(401).send({ message: err });
+      }
+
+      const doc = await fastify.db.Registration.findOne({
+        applicant_email: request.params.id,
+        evaluator: authUser.email,
+      });
+
+      if (!doc) {
+        return reply.status(404).send({ message: "Not found" });
+      }
+      return reply
+        .status(200)
+        .send({ ...doc.toObject(), id: doc.applicant_email });
+    }
+  );
 };
 
 export default verify;

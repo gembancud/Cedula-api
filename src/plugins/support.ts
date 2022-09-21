@@ -2,6 +2,8 @@ import fp from "fastify-plugin";
 import {
   Evaluator,
   EvaluatorSchema,
+  FacebookUser,
+  FacebookUserSchema,
   Registration,
   RegistrationSchema,
   User,
@@ -12,8 +14,7 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
 import { fastifyRequestContextPlugin } from "@fastify/request-context";
 
-// import fastifyMultipart from "@fastify/multipart";
-// import multer from "fastify-multer";
+import fastifyRedis from "@fastify/redis";
 
 import { auth } from "../utils/initFirebase";
 
@@ -28,7 +29,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
 
   fastify.register(fastifyCors, {
     origin: true,
-    exposedHeaders: "X-Total-Count",
+    exposedHeaders: ["Content-Range"],
   });
 
   fastify.register(fastifyJwt, {
@@ -48,6 +49,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     })
     .then((conn) => {
       fastify.decorate("db", {
+        FacebookUser: conn.model("FacebookUser", FacebookUserSchema),
         User: conn.model("User", UserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
@@ -73,8 +75,10 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     }
   });
 
-  // fastify.register(fastifyMultipart, { attachFieldsToBody: "keyValues" });
-  // fastify.register(multer.contentParser);
+  fastify.register(fastifyRedis, {
+    host: "127.0.0.1",
+    port: 6379,
+  });
 });
 
 // When using .decorate you have to specify added properties for Typescript
@@ -83,6 +87,7 @@ declare module "fastify" {
     generateJwt: (email: string, idtoken: string) => string;
     verifyFbAuth: (token: string) => any;
     db: {
+      FacebookUser: mongoose.Model<FacebookUser>;
       User: mongoose.Model<User>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;

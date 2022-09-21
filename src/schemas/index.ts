@@ -17,6 +17,23 @@ export const UserSchema = new Schema<User>({
   updatedAt: { type: Date, default: Date.now },
 });
 
+export interface FacebookUser {
+  _id: string;
+  name: string;
+  email: string;
+  link: string;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+export const FacebookUserSchema = new Schema<FacebookUser>({
+  name: { type: String, required: true },
+  email: { type: String, required: true, index: true, unique: true },
+  link: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, default: Date.now },
+});
+
 export interface Registration {
   _id: string;
   applicant_name: string;

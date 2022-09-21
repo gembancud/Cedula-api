@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 
 const VerifyGetResponse = Type.Array(
   Type.Object({
@@ -15,6 +15,23 @@ const VerifyGetResponse = Type.Array(
   })
 );
 
+const VerifyGetOneParams = Type.Object({
+  id: Type.String(),
+});
+
+const VerifyGetOneResponse = Type.Object({
+  id: Type.String(),
+  applicant_name: Type.String(),
+  applicant_email: Type.String({ format: "email" }),
+  applicant_link: Type.String(),
+  createdAt: Type.String(),
+  updatedAt: Type.String(),
+  documents: Type.Array(Type.String()),
+  status: Type.String(),
+  evaluation: Type.String(),
+  evaluator: Type.String(),
+});
+
 export const VerifyGetOptions = {
   schema: {
     response: {
@@ -22,3 +39,13 @@ export const VerifyGetOptions = {
     },
   },
 };
+export const VerifyGetOneOptions = {
+  schema: {
+    params: VerifyGetOneParams,
+    response: {
+      200: VerifyGetOneResponse,
+    },
+  },
+};
+
+export type VerifyGetOneParams = Static<typeof VerifyGetOneParams>;
