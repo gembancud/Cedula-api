@@ -37,7 +37,6 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         console.log(err);
         return reply.status(401).send({ message: err });
       }
-      console.log("OTEN: ", authUser);
 
       const captcha = await hcaptchaVerify(captchaToken);
       if (!captcha)
@@ -47,15 +46,34 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         { $sample: { size: 1 } },
       ]);
 
-      const existing = await fastify.db.Registration.findOne({ email });
-      if (existing)
+      const existing = await fastify.db.Registration.findOne({
+        applicant_email: email,
+      });
+      if (existing) {
         return reply.status(409).send({ message: "Registration exists" });
+      }
       const registration = new fastify.db.Registration({
         applicant_name: name,
         applicant_email: email,
         applicant_link: link,
         fbuid: authUser.uid,
         evaluator: evaluator[0].email,
+      });
+
+      // PROTOTYPE STEP: Automatically adds facebookuser upon registration
+      // this bypasses registration step temporarily.
+      // TODO: Remove this step when registration and verification is complete
+      const facebookUser = new fastify.db.FacebookUser({
+        name,
+        email,
+        link,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+      });
+      facebookUser.save((err, user) => {
+        if (err) {
+          console.log(err);
+        }
       });
 
       registration.save((err, user) => {
