@@ -66,7 +66,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const facebookUser = new fastify.db.FacebookUser({
         name,
         email,
-        link,
+        link: link.split("/").slice(-1)[0],
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
       });
