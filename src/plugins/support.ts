@@ -33,7 +33,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
   });
 
   fastify.register(fastifyJwt, {
-    secret: "supersecret",
+    secret: process.env.JWT_SECRET!,
     sign: {
       expiresIn: "1h",
     },
@@ -76,7 +76,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
   });
 
   fastify.register(fastifyRedis, {
-    host: "127.0.0.1",
+    host: process.env.REDIS_HOST!,
     port: 6379,
   });
 });
