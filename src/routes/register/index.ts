@@ -63,10 +63,11 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       // PROTOTYPE STEP: Automatically adds facebookuser upon registration
       // this bypasses registration step temporarily.
       // TODO: Remove this step when registration and verification is complete
+      const splicedLink = link.split("/").slice(-1)[0];
       const facebookUser = new fastify.db.FacebookUser({
         name,
         email,
-        link: link.split("/").slice(-1)[0],
+        link: splicedLink,
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
       });
@@ -75,6 +76,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           console.log(err);
         }
       });
+      fastify.redis.set(splicedLink, "1", "EX", 60 * 60 * 24);
 
       registration.save((err, user) => {
         if (err || !user) {
