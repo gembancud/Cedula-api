@@ -93,20 +93,21 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   fastify.get("/", RegisterGetOptions, async function (request, reply) {
-    let uid;
     try {
       const token = request.headers.authorization;
-      uid = await fastify.verifyFbAuth(token!).uid;
+      const { uid } = await fastify.verifyFbAuth(token!);
+
+      const existing = await fastify.db.Registration.findOne({ fbuid: uid });
+      if (!existing)
+        return reply
+          .status(409)
+          .send({ message: "Registration does not exist" });
+
+      return reply.status(200).send({ ...existing.toObject() });
     } catch (err) {
       console.log(err);
       return reply.status(401).send({ message: err });
     }
-
-    const existing = await fastify.db.Registration.findOne({ fbuid: uid });
-    if (!existing)
-      return reply.status(409).send({ message: "Registration does not exist" });
-
-    return reply.status(201).send({ ...existing.toObject() });
   });
 
   fastify.post<{ Body: UploadBody }>(
