@@ -4,6 +4,8 @@ import {
   EvaluatorDeleteOptions,
   EvaluatorPostBody,
   EvaluatorPostOptions as EvaluatorPostOptions,
+  TagPostBody,
+  TagPostOptions,
 } from "./types";
 
 const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -54,6 +56,50 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         }
       });
       return reply.status(200).send({ message: "Evaluator deleted" });
+    }
+  );
+
+  fastify.post<{ Body: TagPostBody }>(
+    "/tag",
+    TagPostOptions,
+    async function (request, reply) {
+      try {
+        const { label, tag, password } = request.body;
+        if (password !== process.env.ADMIN_PASSWORD)
+          return reply.forbidden("Invalid password");
+
+        const doctag = new fastify.db.Tag({
+          label,
+          tag,
+        });
+        console.log("doctag", doctag);
+
+        doctag.save((err, doctag) => {
+          if (err || !doctag) {
+            return reply.internalServerError("Error saving tag to db");
+          }
+        });
+
+        // Invalidate cache and replace with new tags
+        await fastify.redis.del("fb_tags");
+        const outTags: object[] = [];
+        const docTags = await fastify.db.Tag.find();
+        for (const docTag of docTags) {
+          const { label, tag } = docTag;
+          outTags.push({ label, tag });
+        }
+        fastify.redis.set(
+          "fb_tags",
+          JSON.stringify(outTags),
+          "EX",
+          60 * 60 * 24
+        );
+
+        return reply.status(201).send("Tag created");
+      } catch (err) {
+        console.log(err);
+        return reply.internalServerError("Error saving tag");
+      }
     }
   );
 };
