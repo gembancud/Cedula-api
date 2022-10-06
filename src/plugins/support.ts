@@ -6,6 +6,8 @@ import {
   FacebookUserSchema,
   Registration,
   RegistrationSchema,
+  Tag,
+  TagSchema,
   User,
   UserSchema,
 } from "../schemas/index";
@@ -53,6 +55,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
         User: conn.model("User", UserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
+        Tag: conn.model("Tag", TagSchema),
       });
       return conn;
     })
@@ -91,6 +94,7 @@ declare module "fastify" {
       User: mongoose.Model<User>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;
+      Tag: mongoose.Model<Tag>;
     };
   }
   interface FastifyRequest {

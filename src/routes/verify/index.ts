@@ -28,9 +28,10 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     } catch (err) {
       return reply.status(401).send({ message: err });
     }
+    console.log("");
 
     const docList = await fastify.db.Registration.find({
-      evaluator: authUser.email,
+      evaluators: authUser.email,
     });
     const objList = docList.map((item) => {
       return { ...item.toObject(), id: item.applicant_email };

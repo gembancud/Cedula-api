@@ -45,7 +45,7 @@ export interface Registration {
   documents: string[];
   status: string;
   evaluation: string;
-  evaluator: string;
+  evaluators: string[];
 }
 
 export const RegistrationSchema = new Schema<Registration>({
@@ -58,7 +58,7 @@ export const RegistrationSchema = new Schema<Registration>({
   documents: { type: [String] },
   status: { type: String, default: "pending" },
   evaluation: { type: String, default: "" },
-  evaluator: { type: String, default: "" },
+  evaluators: { type: [String] },
 });
 
 export interface Evaluator {
@@ -72,4 +72,17 @@ export const EvaluatorSchema = new Schema<Evaluator>({
   email: { type: String, required: true, index: true, unique: true },
   createdAt: { type: Date, default: Date.now },
   credential: { type: String, required: true },
+});
+
+export interface Tag {
+  _id: string;
+  label: string;
+  tag: string;
+  updatedAt: Date;
+}
+
+export const TagSchema = new Schema<Tag>({
+  label: { type: String, required: true, index: true, unique: true },
+  tag: { type: String, required: true },
+  updatedAt: { type: Date, default: Date.now },
 });

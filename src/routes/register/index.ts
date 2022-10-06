@@ -42,22 +42,26 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!captcha)
         return reply.status(401).send({ message: "Captcha Unauthorized" });
 
-      const evaluator = await fastify.db.Evaluator.aggregate([
-        { $sample: { size: 1 } },
-      ]);
-
       const existing = await fastify.db.Registration.findOne({
         applicant_email: email,
       });
       if (existing) {
         return reply.status(409).send({ message: "Registration exists" });
       }
+      const dbEvaluators = await fastify.db.Evaluator.aggregate([
+        { $sample: { size: 1 } },
+      ]);
+      const evaluators: string[] = [];
+      for (const evaluator of dbEvaluators) {
+        evaluators.push(evaluator.email);
+      }
+
       const registration = new fastify.db.Registration({
         applicant_name: name,
         applicant_email: email,
         applicant_link: link,
         fbuid: authUser.uid,
-        evaluator: evaluator[0].email,
+        evaluators: evaluators,
       });
 
       // PROTOTYPE STEP: Automatically adds facebookuser upon registration
@@ -72,7 +76,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
       });
       facebookUser.save((err, user) => {
-        if (err) {
+        if (err || !user) {
           console.log(err);
         }
       });

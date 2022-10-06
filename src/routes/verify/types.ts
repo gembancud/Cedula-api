@@ -11,7 +11,7 @@ const VerifyGetResponse = Type.Array(
     documents: Type.Array(Type.String()),
     status: Type.String(),
     evaluation: Type.String(),
-    evaluator: Type.String(),
+    evaluators: Type.Array(Type.String()),
   })
 );
 
@@ -29,7 +29,7 @@ const VerifyGetOneResponse = Type.Object({
   documents: Type.Array(Type.String()),
   status: Type.String(),
   evaluation: Type.String(),
-  evaluator: Type.String(),
+  evaluators: Type.Array(Type.String()),
 });
 
 export const VerifyGetOptions = {

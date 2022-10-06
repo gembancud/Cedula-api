@@ -22,7 +22,7 @@ const RegisterPostResponse = Type.Object({
   documents: Type.Array(Type.String()),
   status: Type.String(),
   evaluation: Type.String(),
-  evaluator: Type.String(),
+  evaluators: Type.Array(Type.String()),
 
   cloudinary: Type.Object({
     url: Type.String(),
@@ -42,7 +42,7 @@ const RegisterGetResponse = Type.Object({
   documents: Type.Array(Type.String()),
   status: Type.String(),
   evaluation: Type.String(),
-  evaluator: Type.String(),
+  evaluators: Type.Array(Type.String()),
 });
 
 const UploadResponse = Type.Object({
@@ -54,7 +54,7 @@ const UploadResponse = Type.Object({
   documents: Type.Array(Type.String()),
   status: Type.String(),
   evaluation: Type.String(),
-  evaluator: Type.String(),
+  evaluators: Type.String(),
 });
 
 export const RegisterPostOptions = {
