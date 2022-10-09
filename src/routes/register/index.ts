@@ -28,7 +28,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/",
     RegisterPostOptions,
     async function (request, reply) {
-      const { name, email, link, captchaToken } = request.body;
+      const { name, email, links, org, captchaToken } = request.body;
       let authUser;
       try {
         const token = request.headers.authorization;
@@ -59,18 +59,27 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const registration = new fastify.db.Registration({
         applicant_name: name,
         applicant_email: email,
-        applicant_link: link,
+        applicant_links: JSON.stringify(links),
+        org,
         fbuid: authUser.uid,
         evaluators: evaluators,
+      });
+
+      registration.save((err, user) => {
+        if (err || !user) {
+          return reply.internalServerError("Creating Registration Failed");
+        }
       });
 
       // PROTOTYPE STEP: Automatically adds facebookuser upon registration
       // this bypasses registration step temporarily.
       // TODO: Remove this step when registration and verification is complete
-      const splicedLink = link.split("/").slice(-1)[0];
+      const splicedLink = links[0].link.split("/").slice(-1)[0];
+      const fbLink = `site:fb:link:${splicedLink}`;
       const facebookUser = new fastify.db.FacebookUser({
         name,
         email,
+        orgs: [org],
         link: splicedLink,
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
@@ -80,15 +89,9 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           console.log(err);
         }
       });
-      fastify.redis.set(splicedLink, "1", "EX", 60 * 60 * 24);
+      fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
 
-      registration.save((err, user) => {
-        if (err || !user) {
-          return reply.internalServerError("Creating Registration Failed");
-        }
-      });
-
-      const cloudinary = await genCloudinaryRequest();
+      const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({
         ...registration.toObject(),
         cloudinary,
@@ -101,13 +104,16 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const token = request.headers.authorization;
       const { uid } = await fastify.verifyFbAuth(token!);
 
-      const existing = await fastify.db.Registration.findOne({ fbuid: uid });
+      const existing = await fastify.db.Registration.find({ fbuid: uid });
       if (!existing)
         return reply
           .status(409)
           .send({ message: "Registration does not exist" });
 
-      return reply.status(200).send({ ...existing.toObject() });
+      const registrations = existing.map((reg) => {
+        return { ...reg.toObject() };
+      });
+      return reply.status(200).send(registrations);
     } catch (err) {
       console.log(err);
       return reply.status(401).send({ message: err });
@@ -118,9 +124,9 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/upload",
     UploadOptions,
     async function (request, reply) {
-      const { email, documents } = request.body;
+      const { email, org, documents } = request.body;
       const registration = await fastify.db.Registration.findOneAndUpdate(
-        { email },
+        { email, org },
         { $push: { documents } }
       );
       if (!registration) return reply.badRequest("Upload failed");

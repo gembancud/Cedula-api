@@ -28,11 +28,11 @@ export const uploadPicture = (content: Buffer): Promise<UploadApiResponse> => {
   });
 };
 
-export const genCloudinaryRequest = async () => {
+export const genCloudinaryRequest = async (org: string) => {
   const url = `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/auto/upload`;
   const timestamp = Math.round(new Date().getTime() / 1000);
   const signature = await cloudinary.utils.api_sign_request(
-    { timestamp, upload_preset: "cedula" },
+    { timestamp, upload_preset: "cedula", folder: org },
     process.env.CLOUDINARY_API_SECRET!
   );
   const api_key = process.env.CLOUDINARY_API_KEY;

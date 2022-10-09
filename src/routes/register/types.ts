@@ -3,19 +3,22 @@ import { Type, Static } from "@sinclair/typebox";
 const RegisterPostRequest = Type.Object({
   name: Type.String(),
   email: Type.String({ format: "email" }),
-  link: Type.String(),
+  org: Type.String(),
+  links: Type.Array(Type.Object({ link: Type.String(), site: Type.String() })),
   captchaToken: Type.String(),
 });
 
 const UploadRequest = Type.Object({
   email: Type.String({ format: "email" }),
+  org: Type.String(),
   documents: Type.Array(Type.String()),
 });
 
 const RegisterPostResponse = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
-  applicant_link: Type.String(),
+  applicant_links: Type.String(),
+  org: Type.String(),
   fbuid: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),
@@ -32,22 +35,27 @@ const RegisterPostResponse = Type.Object({
   }),
 });
 
-const RegisterGetResponse = Type.Object({
-  applicant_name: Type.String(),
-  applicant_email: Type.String({ format: "email" }),
-  applicant_link: Type.String(),
-  fbuid: Type.String(),
-  createdAt: Type.String(),
-  updatedAt: Type.String(),
-  documents: Type.Array(Type.String()),
-  status: Type.String(),
-  evaluation: Type.String(),
-  evaluators: Type.Array(Type.String()),
-});
+const RegisterGetResponse = Type.Array(
+  Type.Object({
+    applicant_name: Type.String(),
+    applicant_email: Type.String({ format: "email" }),
+    applicant_links: Type.String(),
+    org: Type.String(),
+    fbuid: Type.String(),
+    createdAt: Type.String(),
+    updatedAt: Type.String(),
+    documents: Type.Array(Type.String()),
+    status: Type.String(),
+    evaluation: Type.String(),
+    evaluators: Type.Array(Type.String()),
+  })
+);
 
 const UploadResponse = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
+  applicant_links: Type.String(),
+  org: Type.String(),
   fbuid: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),

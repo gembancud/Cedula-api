@@ -4,10 +4,12 @@ const EvaluatorPostRequest = Type.Object({
   email: Type.String({ format: "email" }),
   password: Type.String(),
   credential: Type.String(),
+  org: Type.String(),
 });
 
 const EvaluatorDeleteRequest = Type.Object({
   email: Type.String({ format: "email" }),
+  org: Type.String(),
   password: Type.String(),
 });
 
@@ -38,6 +40,7 @@ const TagPostRequest = Type.Object({
   password: Type.String(),
   label: Type.String(),
   tag: Type.String(),
+  site: Type.String(),
 });
 
 export const TagPostOptions = {

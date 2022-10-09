@@ -4,6 +4,8 @@ import {
   EvaluatorSchema,
   FacebookUser,
   FacebookUserSchema,
+  Org,
+  OrgSchema,
   Registration,
   RegistrationSchema,
   Tag,
@@ -14,7 +16,7 @@ import {
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
-import { fastifyRequestContextPlugin } from "@fastify/request-context";
+// import { fastifyRequestContextPlugin } from "@fastify/request-context";
 
 import fastifyRedis from "@fastify/redis";
 
@@ -27,7 +29,7 @@ export interface SupportPluginOptions {
 // The use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 export default fp<SupportPluginOptions>(async (fastify, opts) => {
-  fastify.register(fastifyRequestContextPlugin);
+  // fastify.register(fastifyRequestContextPlugin);
 
   fastify.register(fastifyCors, {
     origin: true,
@@ -56,11 +58,12 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
         Tag: conn.model("Tag", TagSchema),
+        Org: conn.model("Org", OrgSchema),
       });
       return conn;
     })
     .catch((err) => {
-      console.log(err);
+      console.log("database error", err);
     });
 
   if (!db) {
@@ -95,6 +98,7 @@ declare module "fastify" {
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;
       Tag: mongoose.Model<Tag>;
+      Org: mongoose.Model<Org>;
     };
   }
   interface FastifyRequest {
@@ -102,8 +106,8 @@ declare module "fastify" {
   }
 }
 
-declare module "@fastify/request-context" {
-  interface RequestContextData {
-    user: User;
-  }
-}
+// declare module "@fastify/request-context" {
+//   interface RequestContextData {
+//     user: User;
+//   }
+// }

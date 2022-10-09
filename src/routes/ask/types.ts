@@ -1,6 +1,8 @@
 import { Type, Static } from "@sinclair/typebox";
 
 const AskGetQuery = Type.Object({
+  site: Type.String(),
+  orgs: Type.Array(Type.String()),
   links: Type.Array(Type.String()),
 });
 
@@ -8,7 +10,7 @@ const AskGetResponse = Type.Object({
   links: Type.Array(
     Type.Object({
       link: Type.String(),
-      verified: Type.Boolean(),
+      orgs: Type.Array(Type.String()),
     })
   ),
 });

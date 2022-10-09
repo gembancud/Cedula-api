@@ -17,16 +17,17 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/evaluator",
     EvaluatorPostOptions,
     async function (request, reply) {
-      const { email, password, credential } = request.body;
+      const { email, password, org, credential } = request.body;
       if (password !== process.env.ADMIN_PASSWORD)
         return reply.forbidden("Invalid password");
 
-      const user = await fastify.db.Evaluator.findOne({ email });
+      const user = await fastify.db.Evaluator.findOne({ email, org });
       if (user) return reply.conflict("User already exists");
 
       const evaluator = new fastify.db.Evaluator({
         email,
         credential,
+        org,
       });
       evaluator.save((err, evaluator) => {
         if (err || !evaluator) {
@@ -41,10 +42,10 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/evaluator",
     EvaluatorDeleteOptions,
     async function (request, reply) {
-      const { email, password } = request.body;
+      const { email, org, password } = request.body;
       if (password !== process.env.ADMIN_PASSWORD)
         fastify.httpErrors.forbidden();
-      const evaluator = await fastify.db.Evaluator.findOne({ email });
+      const evaluator = await fastify.db.Evaluator.findOne({ email, org });
       if (!evaluator) {
         return reply.status(404).send({ message: "Evaluator not found" });
       }
@@ -64,12 +65,13 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     TagPostOptions,
     async function (request, reply) {
       try {
-        const { label, tag, password } = request.body;
+        const { label, site, tag, password } = request.body;
         if (password !== process.env.ADMIN_PASSWORD)
           return reply.forbidden("Invalid password");
 
         const doctag = new fastify.db.Tag({
           label,
+          site,
           tag,
         });
         console.log("doctag", doctag);
@@ -81,7 +83,7 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
 
         // Invalidate cache and replace with new tags
-        await fastify.redis.del("fb_tags");
+        await fastify.redis.del(`site:${site}:tags`);
         const outTags: object[] = [];
         const docTags = await fastify.db.Tag.find();
         for (const docTag of docTags) {
@@ -89,7 +91,7 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           outTags.push({ label, tag });
         }
         fastify.redis.set(
-          "fb_tags",
+          `site:${site}:tags`,
           JSON.stringify(outTags),
           "EX",
           60 * 60 * 24

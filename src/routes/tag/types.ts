@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Type, Static } from "@sinclair/typebox";
 
 const TagGetResponse = Type.Object({
   tags: Type.Array(
@@ -16,3 +16,18 @@ export const TagGetOptions = {
     },
   },
 };
+
+const TagGetOneParams = Type.Object({
+  id: Type.String(),
+});
+
+export const TagGetOneOptions = {
+  schema: {
+    params: TagGetOneParams,
+    response: {
+      200: TagGetResponse,
+    },
+  },
+};
+
+export type TagGetOneParams = Static<typeof TagGetOneParams>;

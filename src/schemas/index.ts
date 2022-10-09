@@ -24,6 +24,7 @@ export interface FacebookUser {
   link: string;
   createdAt: Date;
   expiresAt: Date;
+  orgs: string[];
 }
 
 export const FacebookUserSchema = new Schema<FacebookUser>({
@@ -32,13 +33,15 @@ export const FacebookUserSchema = new Schema<FacebookUser>({
   link: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, default: Date.now },
+  orgs: { type: [String], default: [] },
 });
 
 export interface Registration {
   _id: string;
   applicant_name: string;
   applicant_email: string;
-  applicant_link: string;
+  applicant_links: string;
+  org: string;
   fbuid: string;
   createdAt: Date;
   updatedAt: Date;
@@ -50,9 +53,10 @@ export interface Registration {
 
 export const RegistrationSchema = new Schema<Registration>({
   applicant_name: { type: String, required: true },
-  applicant_email: { type: String, required: true, index: true, unique: true },
-  applicant_link: { type: String, required: true },
-  fbuid: { type: String, required: true, unique: true },
+  applicant_email: { type: String, required: true },
+  applicant_links: { type: String, required: true },
+  org: { type: String, required: true },
+  fbuid: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   documents: { type: [String] },
@@ -66,23 +70,44 @@ export interface Evaluator {
   email: string;
   createdAt: Date;
   credential: string;
+  org: string;
 }
 
 export const EvaluatorSchema = new Schema<Evaluator>({
-  email: { type: String, required: true, index: true, unique: true },
+  email: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   credential: { type: String, required: true },
+  org: { type: String, required: true },
 });
 
 export interface Tag {
   _id: string;
+  site: string;
   label: string;
   tag: string;
   updatedAt: Date;
 }
 
 export const TagSchema = new Schema<Tag>({
-  label: { type: String, required: true, index: true, unique: true },
+  label: { type: String, required: true, unique: true },
+  site: { type: String, required: true },
   tag: { type: String, required: true },
   updatedAt: { type: Date, default: Date.now },
+});
+
+export interface Org {
+  _id: string;
+  name: string;
+  description: string;
+  createdAt: Date;
+  access: string;
+  evaluatorcount: number;
+}
+
+export const OrgSchema = new Schema<Org>({
+  name: { type: String, required: true, index: true, unique: true },
+  description: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  access: { type: String, required: true },
+  evaluatorcount: { type: Number, default: 1 },
 });

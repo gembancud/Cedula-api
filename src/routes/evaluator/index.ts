@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
+import { EvaluatorGetOptions, EvaluatorGetQuery } from "./types";
 
 const Evaluator: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.addHook("onRequest", async (request, reply) => {
@@ -15,23 +16,28 @@ const Evaluator: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     }
   });
 
-  fastify.get("/", async function (request, reply) {
-    let authUser;
-    try {
-      const token = request.headers.authorization;
-      authUser = await fastify.verifyFbAuth(token!);
-    } catch (err) {
-      return reply.status(401).send({ message: err });
-    }
-    const evaluator = await fastify.db.Evaluator.findOne({
-      email: authUser.email,
-    });
-    if (!evaluator) {
-      return reply.status(401).send({ message: "Evaluator not found" });
-    }
+  fastify.get<{ Querystring: EvaluatorGetQuery }>(
+    "/",
+    EvaluatorGetOptions,
+    async function (request, reply) {
+      const { org } = request.query;
+      try {
+        const token = request.headers.authorization;
+        const authUser = await fastify.verifyFbAuth(token!);
+        const evaluator = await fastify.db.Evaluator.findOne({
+          email: authUser.email,
+          org,
+        });
+        if (!evaluator) {
+          return reply.status(401).send({ message: "Evaluator not found" });
+        }
 
-    return reply.status(200).send({ message: "Evaluator" });
-  });
+        return reply.status(200).send({ message: "Evaluator" });
+      } catch (err) {
+        return reply.status(401).send({ message: err });
+      }
+    }
+  );
 };
 
 export default Evaluator;
