@@ -74,13 +74,12 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       // PROTOTYPE STEP: Automatically adds facebookuser upon registration
       // this bypasses registration step temporarily.
       // TODO: Remove this step when registration and verification is complete
-      const splicedLink = links[0].link.split("/").slice(-1)[0];
-      const fbLink = `site:fb:link:${splicedLink}`;
+      const splicedFbLink = links[0].link.split("/").slice(-1)[0];
       const facebookUser = new fastify.db.FacebookUser({
         name,
         email,
         orgs: [org],
-        link: splicedLink,
+        link: splicedFbLink,
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
       });
@@ -89,7 +88,27 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           console.log(err);
         }
       });
+      const fbLink = `site:fb:link:${splicedFbLink}`;
       fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
+
+      if (links.length > 1) {
+        const splicedTwitterLink = links[1].link.split("/").slice(-1)[0];
+        const twitterUser = new fastify.db.TwitterUser({
+          name,
+          email,
+          orgs: [org],
+          link: splicedTwitterLink,
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+        });
+        twitterUser.save((err, user) => {
+          if (err || !user) {
+            console.log(err);
+          }
+        });
+        const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
+        fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
+      }
 
       const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({

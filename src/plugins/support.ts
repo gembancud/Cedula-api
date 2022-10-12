@@ -10,6 +10,8 @@ import {
   RegistrationSchema,
   Tag,
   TagSchema,
+  TwitterUser,
+  TwitterUserSchema,
   User,
   UserSchema,
 } from "../schemas/index";
@@ -54,6 +56,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     .then((conn) => {
       fastify.decorate("db", {
         FacebookUser: conn.model("FacebookUser", FacebookUserSchema),
+        TwitterUser: conn.model("TwitterUser", TwitterUserSchema),
         User: conn.model("User", UserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
@@ -94,6 +97,7 @@ declare module "fastify" {
     verifyFbAuth: (token: string) => any;
     db: {
       FacebookUser: mongoose.Model<FacebookUser>;
+      TwitterUser: mongoose.Model<TwitterUser>;
       User: mongoose.Model<User>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;

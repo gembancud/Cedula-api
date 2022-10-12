@@ -46,6 +46,11 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         // Check database for link
         let users;
         switch (site) {
+          case "twitter":
+            users = await fastify.db.TwitterUser.find({
+              link: { $in: dbLinks },
+            });
+            break;
           case "fb":
           default:
             users = await fastify.db.FacebookUser.find({

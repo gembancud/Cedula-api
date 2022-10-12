@@ -36,6 +36,25 @@ export const FacebookUserSchema = new Schema<FacebookUser>({
   orgs: { type: [String], default: [] },
 });
 
+export interface TwitterUser {
+  _id: string;
+  name: string;
+  email: string;
+  link: string;
+  createdAt: Date;
+  expiresAt: Date;
+  orgs: string[];
+}
+
+export const TwitterUserSchema = new Schema<TwitterUser>({
+  name: { type: String, required: true },
+  email: { type: String, required: true, index: true, unique: true },
+  link: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, default: Date.now },
+  orgs: { type: [String], default: [] },
+});
+
 export interface Registration {
   _id: string;
   applicant_name: string;
