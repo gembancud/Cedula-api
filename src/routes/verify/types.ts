@@ -5,9 +5,7 @@ const VerifyGetResponse = Type.Array(
     id: Type.String(),
     applicant_name: Type.String(),
     applicant_email: Type.String({ format: "email" }),
-    applicant_links: Type.Array(
-      Type.Object({ link: Type.String(), site: Type.String() })
-    ),
+    applicant_links: Type.String(),
     createdAt: Type.String(),
     updatedAt: Type.String(),
     documents: Type.Array(Type.String()),
@@ -25,9 +23,7 @@ const VerifyGetOneResponse = Type.Object({
   id: Type.String(),
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
-  applicant_links: Type.Array(
-    Type.Object({ link: Type.String(), site: Type.String() })
-  ),
+  applicant_links: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),
   documents: Type.Array(Type.String()),

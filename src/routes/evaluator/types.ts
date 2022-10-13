@@ -1,7 +1,7 @@
 import { Type, Static } from "@sinclair/typebox";
 
 const EvaluatorGetQuery = Type.Object({
-  org: Type.String(),
+  // org: Type.String(),
 });
 
 export const EvaluatorGetOptions = {

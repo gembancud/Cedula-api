@@ -20,13 +20,13 @@ const Evaluator: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/",
     EvaluatorGetOptions,
     async function (request, reply) {
-      const { org } = request.query;
+      // const { org } = request.query;
       try {
         const token = request.headers.authorization;
         const authUser = await fastify.verifyFbAuth(token!);
         const evaluator = await fastify.db.Evaluator.findOne({
           email: authUser.email,
-          org,
+          // org,
         });
         if (!evaluator) {
           return reply.status(401).send({ message: "Evaluator not found" });

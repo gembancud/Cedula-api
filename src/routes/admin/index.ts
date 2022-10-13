@@ -22,7 +22,10 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.forbidden("Invalid password");
 
       const user = await fastify.db.Evaluator.findOne({ email, org });
-      if (user) return reply.conflict("User already exists");
+      if (user) {
+        console.log("user", user);
+        return reply.conflict("User already exists");
+      }
 
       const evaluator = new fastify.db.Evaluator({
         email,
@@ -42,10 +45,10 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/evaluator",
     EvaluatorDeleteOptions,
     async function (request, reply) {
-      const { email, org, password } = request.body;
+      const { email, password } = request.body;
       if (password !== process.env.ADMIN_PASSWORD)
         fastify.httpErrors.forbidden();
-      const evaluator = await fastify.db.Evaluator.findOne({ email, org });
+      const evaluator = await fastify.db.Evaluator.findOne({ email });
       if (!evaluator) {
         return reply.status(404).send({ message: "Evaluator not found" });
       }
