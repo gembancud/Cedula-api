@@ -23,6 +23,7 @@ import fastifyCors from "@fastify/cors";
 import fastifyRedis from "@fastify/redis";
 
 import { auth } from "../utils/initFirebase";
+import { DecodedIdToken } from "firebase-admin/auth";
 
 export interface SupportPluginOptions {
   // Specify Support plugin options here
@@ -74,10 +75,12 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
   }
 
   fastify.decorate("verifyFbAuth", async (token: string) => {
-    const decodedToken = await auth.verifyIdToken(token).catch((error) => {
-      console.error(error);
-      return error;
-    });
+    const decodedToken: DecodedIdToken = await auth
+      .verifyIdToken(token)
+      .catch((error) => {
+        console.error(error);
+        return error;
+      });
     if (decodedToken != null) {
       // console.log("VerifyfbAuth: ", decodedToken);
       return decodedToken;

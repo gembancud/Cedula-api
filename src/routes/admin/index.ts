@@ -4,6 +4,8 @@ import {
   EvaluatorDeleteOptions,
   EvaluatorPostBody,
   EvaluatorPostOptions as EvaluatorPostOptions,
+  OrgPostBody,
+  OrgPostOptions,
   TagPostBody,
   TagPostOptions,
 } from "./types";
@@ -104,6 +106,35 @@ const admin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       } catch (err) {
         console.log(err);
         return reply.internalServerError("Error saving tag");
+      }
+    }
+  );
+
+  fastify.post<{ Body: OrgPostBody }>(
+    "/org",
+    OrgPostOptions,
+    async function (request, reply) {
+      try {
+        const { name, badge, image, access, description, evaluatorcount } =
+          request.body;
+
+        const org = new fastify.db.Org({
+          name,
+          badge,
+          image,
+          access,
+          description,
+          evaluatorcount,
+        });
+        org.save((err, org) => {
+          if (err || !org) {
+            return reply.internalServerError("Error saving org to db");
+          }
+        });
+        return reply.status(201).send("Org created");
+      } catch (err) {
+        console.log(err);
+        return reply.internalServerError("Error saving org");
       }
     }
   );

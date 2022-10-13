@@ -53,3 +53,23 @@ export const TagPostOptions = {
 };
 
 export type TagPostBody = Static<typeof TagPostRequest>;
+
+const OrgPostRequest = Type.Object({
+  name: Type.String(),
+  image: Type.String(),
+  badge: Type.String(),
+  description: Type.String(),
+  access: Type.String(),
+  evaluatorcount: Type.Number(),
+});
+
+export const OrgPostOptions = {
+  schema: {
+    body: OrgPostRequest,
+    response: {
+      201: Type.String(),
+    },
+  },
+};
+
+export type OrgPostBody = Static<typeof OrgPostRequest>;
