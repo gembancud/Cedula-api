@@ -3,6 +3,7 @@ import { Type, Static } from "@sinclair/typebox";
 const RegisterPostRequest = Type.Object({
   name: Type.String(),
   email: Type.String({ format: "email" }),
+  contact_number: Type.String(),
   org: Type.String(),
   links: Type.Array(Type.Object({ link: Type.String(), site: Type.String() })),
   captchaToken: Type.String(),
@@ -18,6 +19,7 @@ const RegisterPostResponse = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
   applicant_links: Type.String(),
+  contact_number: Type.String(),
   org: Type.String(),
   fbuid: Type.String(),
   createdAt: Type.String(),
@@ -35,26 +37,11 @@ const RegisterPostResponse = Type.Object({
   }),
 });
 
-const RegisterGetResponse = Type.Array(
-  Type.Object({
-    applicant_name: Type.String(),
-    applicant_email: Type.String({ format: "email" }),
-    applicant_links: Type.String(),
-    org: Type.String(),
-    fbuid: Type.String(),
-    createdAt: Type.String(),
-    updatedAt: Type.String(),
-    documents: Type.Array(Type.String()),
-    status: Type.String(),
-    evaluation: Type.String(),
-    evaluators: Type.Array(Type.String()),
-  })
-);
-
-const UploadResponse = Type.Object({
+const RegistrationType = Type.Object({
   applicant_name: Type.String(),
   applicant_email: Type.String({ format: "email" }),
   applicant_links: Type.String(),
+  contact_number: Type.String(),
   org: Type.String(),
   fbuid: Type.String(),
   createdAt: Type.String(),
@@ -62,8 +49,12 @@ const UploadResponse = Type.Object({
   documents: Type.Array(Type.String()),
   status: Type.String(),
   evaluation: Type.String(),
-  evaluators: Type.String(),
+  evaluators: Type.Array(Type.String()),
 });
+
+const RegisterGetResponse = Type.Array(RegistrationType);
+
+const UploadResponse = RegistrationType;
 
 export const RegisterPostOptions = {
   schema: {

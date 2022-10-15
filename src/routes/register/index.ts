@@ -28,7 +28,8 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/",
     RegisterPostOptions,
     async function (request, reply) {
-      const { name, email, links, org, captchaToken } = request.body;
+      const { name, email, contact_number, links, org, captchaToken } =
+        request.body;
       let authUser;
       try {
         const token = request.headers.authorization;
@@ -60,6 +61,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         applicant_name: name,
         applicant_email: email,
         applicant_links: JSON.stringify(links),
+        contact_number,
         org,
         fbuid: authUser.uid,
         evaluators: evaluators,
