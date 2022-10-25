@@ -12,8 +12,6 @@ import {
   TagSchema,
   TwitterUser,
   TwitterUserSchema,
-  User,
-  UserSchema,
 } from "../schemas/index";
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
@@ -58,7 +56,6 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
       fastify.decorate("db", {
         FacebookUser: conn.model("FacebookUser", FacebookUserSchema),
         TwitterUser: conn.model("TwitterUser", TwitterUserSchema),
-        User: conn.model("User", UserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
         Tag: conn.model("Tag", TagSchema),
@@ -101,7 +98,6 @@ declare module "fastify" {
     db: {
       FacebookUser: mongoose.Model<FacebookUser>;
       TwitterUser: mongoose.Model<TwitterUser>;
-      User: mongoose.Model<User>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;
       Tag: mongoose.Model<Tag>;
