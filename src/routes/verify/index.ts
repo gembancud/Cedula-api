@@ -97,7 +97,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           return reply.status(404).send({ message: "Org not found" });
         }
         let evalNumber = parseInt(registration.evaluation);
-        if (evalNumber === NaN) evalNumber = 0;
+        if (Number.isNaN(evalNumber)) evalNumber = 0;
 
         switch (evaluation) {
           case "accept":
