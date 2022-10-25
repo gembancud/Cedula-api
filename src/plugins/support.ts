@@ -1,5 +1,7 @@
 import fp from "fastify-plugin";
 import {
+  Evaluation,
+  EvaluationSchema,
   Evaluator,
   EvaluatorSchema,
   FacebookUser,
@@ -12,7 +14,7 @@ import {
   TagSchema,
   TwitterUser,
   TwitterUserSchema,
-} from "../schemas/index";
+} from "../schemas";
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
@@ -58,6 +60,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
         TwitterUser: conn.model("TwitterUser", TwitterUserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
+        Evaluation: conn.model("Evaluation", EvaluationSchema),
         Tag: conn.model("Tag", TagSchema),
         Org: conn.model("Org", OrgSchema),
       });
@@ -100,6 +103,7 @@ declare module "fastify" {
       TwitterUser: mongoose.Model<TwitterUser>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;
+      Evaluation: mongoose.Model<Evaluation>;
       Tag: mongoose.Model<Tag>;
       Org: mongoose.Model<Org>;
     };

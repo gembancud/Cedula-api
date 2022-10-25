@@ -27,6 +27,6 @@ export const RegistrationSchema = new Schema<Registration>({
   updatedAt: { type: Date, default: Date.now },
   documents: { type: [String] },
   status: { type: String, default: "pending" },
-  evaluation: { type: String, default: "" },
+  evaluation: { type: String, default: "0" },
   evaluators: { type: [String] },
 });

@@ -48,4 +48,21 @@ export const VerifyGetOneOptions = {
   },
 };
 
+export const VerifyPostRequest = Type.Object({
+  email: Type.String({ format: "email" }),
+  org: Type.String(),
+  evaluation: Type.String(),
+  comment: Type.String(),
+});
+
+export const VerifyPostOptions = {
+  schema: {
+    body: VerifyPostRequest,
+    response: {
+      200: VerifyGetOneResponse,
+    },
+  },
+};
+
 export type VerifyGetOneParams = Static<typeof VerifyGetOneParams>;
+export type VerifyPostBody = Static<typeof VerifyPostRequest>;
