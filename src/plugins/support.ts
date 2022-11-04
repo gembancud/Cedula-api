@@ -8,6 +8,8 @@ import {
   FacebookUserSchema,
   Org,
   OrgSchema,
+  RedditUser,
+  RedditUserSchema,
   Registration,
   RegistrationSchema,
   Tag,
@@ -58,6 +60,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
       fastify.decorate("db", {
         FacebookUser: conn.model("FacebookUser", FacebookUserSchema),
         TwitterUser: conn.model("TwitterUser", TwitterUserSchema),
+        RedditUser: conn.model("RedditUser", RedditUserSchema),
         Registration: conn.model("Registration", RegistrationSchema),
         Evaluator: conn.model("Evaluator", EvaluatorSchema),
         Evaluation: conn.model("Evaluation", EvaluationSchema),
@@ -101,6 +104,7 @@ declare module "fastify" {
     db: {
       FacebookUser: mongoose.Model<FacebookUser>;
       TwitterUser: mongoose.Model<TwitterUser>;
+      RedditUser: mongoose.Model<RedditUser>;
       Registration: mongoose.Model<Registration>;
       Evaluator: mongoose.Model<Evaluator>;
       Evaluation: mongoose.Model<Evaluation>;

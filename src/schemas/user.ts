@@ -17,7 +17,7 @@ export const UserSchema = new Schema<User>({
   updatedAt: { type: Date, default: Date.now },
 });
 
-export interface FacebookUser {
+interface BaseUser {
   _id: string;
   name: string;
   email: string;
@@ -27,7 +27,7 @@ export interface FacebookUser {
   orgs: string[];
 }
 
-export const FacebookUserSchema = new Schema<FacebookUser>({
+const BaseUserSchema = new Schema<BaseUser>({
   name: { type: String, required: true },
   email: { type: String, required: true, index: true, unique: true },
   link: { type: String, required: true },
@@ -36,21 +36,20 @@ export const FacebookUserSchema = new Schema<FacebookUser>({
   orgs: { type: [String], default: [] },
 });
 
-export interface TwitterUser {
-  _id: string;
-  name: string;
-  email: string;
-  link: string;
-  createdAt: Date;
-  expiresAt: Date;
-  orgs: string[];
-}
+export interface FacebookUser extends BaseUser {}
+
+export const FacebookUserSchema = new Schema<FacebookUser>({
+  ...BaseUserSchema.obj,
+});
+
+export interface TwitterUser extends BaseUser {}
 
 export const TwitterUserSchema = new Schema<TwitterUser>({
-  name: { type: String, required: true },
-  email: { type: String, required: true, index: true, unique: true },
-  link: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date, default: Date.now },
-  orgs: { type: [String], default: [] },
+  ...BaseUserSchema.obj,
+});
+
+export interface RedditUser extends BaseUser {}
+
+export const RedditUserSchema = new Schema<RedditUser>({
+  ...BaseUserSchema.obj,
 });

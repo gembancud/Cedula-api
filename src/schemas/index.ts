@@ -1,8 +1,12 @@
 export { Evaluation, EvaluationSchema } from "./evaluation";
 export { Evaluator, EvaluatorSchema } from "./evaluator";
 export {
-  FacebookUser, FacebookUserSchema,
-  TwitterUser, TwitterUserSchema
+  FacebookUser,
+  FacebookUserSchema,
+  TwitterUser,
+  TwitterUserSchema,
+  RedditUser,
+  RedditUserSchema,
 } from "./user";
 export { Org, OrgSchema } from "./org";
 export { Registration, RegistrationSchema } from "./registration";

@@ -112,6 +112,27 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
       }
 
+      if (links.length > 2) {
+        const splicedRedditLink = links[2].link.split("/").slice(-1)[0];
+        const redditUser = new fastify.db.RedditUser({
+          name,
+          email,
+          orgs: [org],
+          link: splicedRedditLink,
+          createdAt: Date.now(),
+          expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+        });
+        redditUser.save((err, user) => {
+          if (err || !user) {
+            console.log(err);
+          }
+        });
+        const redditLink = `site:reddit:link:${splicedRedditLink}`;
+        fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
+      }
+
+      // END OF PROTOTOYPE STEP
+
       const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({
         ...registration.toObject(),

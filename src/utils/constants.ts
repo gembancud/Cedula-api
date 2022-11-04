@@ -1,1 +1,1 @@
-export const SITES = ["fb", "twitter"];
+export const SITES = ["fb", "twitter", "reddit"];
