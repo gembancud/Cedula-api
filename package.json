@@ -1,7 +1,7 @@
 {
   "name": "cedula-api",
-  "version": "0.2.0",
-  "description": "This project was bootstrapped with Fastify-CLI.",
+  "version": "0.3.0",
+  "description": "API for Cedula",
   "main": "app.ts",
   "directories": {
     "test": "test"
