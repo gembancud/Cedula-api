@@ -8,6 +8,8 @@ import {
   FacebookUserSchema,
   Org,
   OrgSchema,
+  Profile,
+  ProfileSchema,
   RedditUser,
   RedditUserSchema,
   Registration,
@@ -20,7 +22,6 @@ import {
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
-// import { fastifyRequestContextPlugin } from "@fastify/request-context";
 
 import fastifyRedis from "@fastify/redis";
 
@@ -34,8 +35,6 @@ export interface SupportPluginOptions {
 // The use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 export default fp<SupportPluginOptions>(async (fastify, opts) => {
-  // fastify.register(fastifyRequestContextPlugin);
-
   fastify.register(fastifyCors, {
     origin: true,
     exposedHeaders: ["Content-Range"],
@@ -58,6 +57,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     })
     .then((conn) => {
       fastify.decorate("db", {
+        Profile: conn.model("Profile", ProfileSchema),
         FacebookUser: conn.model("FacebookUser", FacebookUserSchema),
         TwitterUser: conn.model("TwitterUser", TwitterUserSchema),
         RedditUser: conn.model("RedditUser", RedditUserSchema),
@@ -102,6 +102,7 @@ declare module "fastify" {
     generateJwt: (email: string, idtoken: string) => string;
     verifyFbAuth: (token: string) => any;
     db: {
+      Profile: mongoose.Model<Profile>;
       FacebookUser: mongoose.Model<FacebookUser>;
       TwitterUser: mongoose.Model<TwitterUser>;
       RedditUser: mongoose.Model<RedditUser>;
@@ -112,13 +113,5 @@ declare module "fastify" {
       Org: mongoose.Model<Org>;
     };
   }
-  interface FastifyRequest {
-    // files: any;
-  }
+  interface FastifyRequest {}
 }
-
-// declare module "@fastify/request-context" {
-//   interface RequestContextData {
-//     user: User;
-//   }
-// }

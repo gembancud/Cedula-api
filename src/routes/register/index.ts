@@ -43,11 +43,17 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!captcha)
         return reply.status(401).send({ message: "Captcha Unauthorized" });
 
-      const existing = await fastify.db.Registration.findOne({
-        applicant_email: email,
+      const existingregistration = await fastify.db.Registration.findOne({
+        email,
+        org,
       });
-      if (existing) {
+      if (existingregistration) {
         return reply.status(409).send({ message: "Registration exists" });
+      }
+
+      const existingprofile = await fastify.db.Profile.findOne({ email });
+      if (existingprofile) {
+        return reply.status(409).send({ message: "Profile already exists" });
       }
       const dbEvaluators = await fastify.db.Evaluator.aggregate([
         { $sample: { size: 1 } },
@@ -57,13 +63,23 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         evaluators.push(evaluator.email);
       }
 
-      const registration = new fastify.db.Registration({
-        applicant_name: name,
-        applicant_email: email,
-        applicant_links: JSON.stringify(links),
+      const profile = new fastify.db.Profile({
+        name,
+        email,
+        links: JSON.stringify(links),
         contact_number,
-        org,
         fbuid: authUser.uid,
+      });
+
+      profile.save((err, profile) => {
+        if (err || !profile) {
+          return reply.internalServerError("Create profile failed");
+        }
+      });
+
+      const registration = new fastify.db.Registration({
+        email,
+        org,
         evaluators: evaluators,
       });
 
@@ -135,6 +151,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
       const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({
+        ...profile.toObject(),
         ...registration.toObject(),
         cloudinary,
       });
@@ -173,9 +190,17 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       );
       if (!registration) return reply.badRequest("Upload failed");
 
-      const newRegistration = await fastify.db.Registration.findOne({ email });
+      const newRegistration = await fastify.db.Registration.findOne({
+        email,
+        org,
+      });
 
-      return reply.status(201).send({ ...newRegistration!.toObject() });
+      const profile = await fastify.db.Profile.findOne({ email });
+
+      return reply.status(201).send({
+        ...profile?.toObject(),
+        ...newRegistration!.toObject(),
+      });
     }
   );
 };

@@ -15,10 +15,10 @@ const UploadRequest = Type.Object({
   documents: Type.Array(Type.String()),
 });
 
-const RegisterPostResponse = Type.Object({
-  applicant_name: Type.String(),
-  applicant_email: Type.String({ format: "email" }),
-  applicant_links: Type.String(),
+const BaseRegister = {
+  name: Type.String(),
+  email: Type.String({ format: "email" }),
+  links: Type.String(),
   contact_number: Type.String(),
   org: Type.String(),
   fbuid: Type.String(),
@@ -28,6 +28,12 @@ const RegisterPostResponse = Type.Object({
   status: Type.String(),
   evaluation: Type.String(),
   evaluators: Type.Array(Type.String()),
+};
+
+const BaseRegisterResponse = Type.Object(BaseRegister);
+
+const RegisterPostResponse = Type.Object({
+  ...BaseRegister,
 
   cloudinary: Type.Object({
     url: Type.String(),
@@ -37,24 +43,9 @@ const RegisterPostResponse = Type.Object({
   }),
 });
 
-const RegistrationType = Type.Object({
-  applicant_name: Type.String(),
-  applicant_email: Type.String({ format: "email" }),
-  applicant_links: Type.String(),
-  contact_number: Type.String(),
-  org: Type.String(),
-  fbuid: Type.String(),
-  createdAt: Type.String(),
-  updatedAt: Type.String(),
-  documents: Type.Array(Type.String()),
-  status: Type.String(),
-  evaluation: Type.String(),
-  evaluators: Type.Array(Type.String()),
-});
+const RegisterGetResponse = Type.Array(BaseRegisterResponse);
 
-const RegisterGetResponse = Type.Array(RegistrationType);
-
-const UploadResponse = RegistrationType;
+const UploadResponse = BaseRegisterResponse;
 
 export const RegisterPostOptions = {
   schema: {

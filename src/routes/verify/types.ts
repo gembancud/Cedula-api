@@ -1,30 +1,10 @@
 import { Static, Type } from "@sinclair/typebox";
 
-const VerifyGetResponse = Type.Array(
-  Type.Object({
-    id: Type.String(),
-    applicant_name: Type.String(),
-    applicant_email: Type.String({ format: "email" }),
-    applicant_links: Type.String(),
-    org: Type.String(),
-    createdAt: Type.String(),
-    updatedAt: Type.String(),
-    documents: Type.Array(Type.String()),
-    status: Type.String(),
-    evaluation: Type.String(),
-    evaluators: Type.Array(Type.String()),
-  })
-);
-
-const VerifyGetOneParams = Type.Object({
+const BaseVerify = Type.Object({
   id: Type.String(),
-});
-
-const VerifyGetOneResponse = Type.Object({
-  id: Type.String(),
-  applicant_name: Type.String(),
-  applicant_email: Type.String({ format: "email" }),
-  applicant_links: Type.String(),
+  name: Type.String(),
+  email: Type.String({ format: "email" }),
+  links: Type.String(),
   org: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),
@@ -34,6 +14,13 @@ const VerifyGetOneResponse = Type.Object({
   evaluators: Type.Array(Type.String()),
 });
 
+const VerifyGetResponse = Type.Array(BaseVerify);
+
+const VerifyGetOneParams = Type.Object({
+  id: Type.String(),
+});
+
+const VerifyGetOneResponse = BaseVerify;
 export const VerifyGetOptions = {
   schema: {
     response: {

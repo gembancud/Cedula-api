@@ -26,12 +26,22 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     try {
       const token = request.headers.authorization;
       const authUser = await fastify.verifyFbAuth(token!);
-      const docList = await fastify.db.Registration.find({
+      const docRegistrationList = await fastify.db.Registration.find({
         evaluators: authUser.email,
       });
-      const objList = docList.map((item) => {
-        return { ...item.toObject(), id: item.applicant_email };
-      });
+
+      const objList = await Promise.all(
+        docRegistrationList.map(async (docRegistration) => {
+          const docProfile = await fastify.db.Profile.findOne({
+            email: docRegistration.email,
+          });
+          if (docProfile) {
+            return { ...docProfile.toObject(), ...docRegistration.toObject() };
+          } else {
+            return reply.status(404).send({ error: "Profile not found" });
+          }
+        })
+      );
       return reply
         .header("Content-Range", `0-9/${objList.length}`)
         .status(200)
@@ -48,17 +58,25 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       try {
         const token = request.headers.authorization;
         const authUser = await fastify.verifyFbAuth(token!);
-        const doc = await fastify.db.Registration.findOne({
-          applicant_email: request.params.id,
+        const docRegistration = await fastify.db.Registration.findOne({
+          email: request.params.id,
           evaluator: authUser.email,
         });
 
-        if (!doc) {
-          return reply.status(404).send({ message: "Not found" });
+        if (!docRegistration) {
+          return reply.status(404).send({ message: "Registration not found" });
         }
-        return reply
-          .status(200)
-          .send({ ...doc.toObject(), id: doc.applicant_email });
+        const docProfile = await fastify.db.Profile.findOne({
+          email: docRegistration.email,
+        });
+        if (docProfile) {
+          return reply.status(200).send({
+            ...docProfile.toObject(),
+            ...docRegistration.toObject(),
+          });
+        } else {
+          return reply.status(404).send({ error: "Profile not found" });
+        }
       } catch (err) {
         return reply.status(401).send({ message: err });
       }
@@ -74,12 +92,16 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         const token = request.headers.authorization;
         const authUser = await fastify.verifyFbAuth(token!);
         const registration = await fastify.db.Registration.findOne({
-          applicant_email: email,
+          email: email,
           org,
           evaluator: authUser.email,
         });
         if (!registration) {
           return reply.status(404).send({ message: "Registration not found" });
+        }
+        const profile = await fastify.db.Profile.findOne({ email: email });
+        if (!profile) {
+          return reply.status(404).send({ message: "Profile not found" });
         }
         const prevEvaluation = await fastify.db.Evaluation.findOne({
           email,
@@ -103,7 +125,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           case "accept":
             if (evalNumber + 1 >= orgDoc.evaluatorcount) {
               await fastify.db.Registration.updateOne(
-                { applicant_email: email, org },
+                { email: email, org },
                 {
                   $set: {
                     status: "accepted",
@@ -115,7 +137,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
               //Todo: Create Facebook and twitter users here
             } else {
               await fastify.db.Registration.updateOne(
-                { applicant_email: email, org },
+                { email: email, org },
                 {
                   $set: {
                     evaluation: (evalNumber + 1).toString(),
@@ -126,7 +148,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             break;
           case "reject":
             await fastify.db.Registration.updateOne(
-              { applicant_email: email, org },
+              { email: email, org },
               {
                 $set: {
                   status: "rejected",
@@ -141,7 +163,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         }
 
         const newEvaluation = new fastify.db.Evaluation({
-          name: registration.applicant_name,
+          name: profile.name,
           email,
           org,
           evaluator: authUser.email,

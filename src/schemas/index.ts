@@ -11,3 +11,4 @@ export {
 export { Org, OrgSchema } from "./org";
 export { Registration, RegistrationSchema } from "./registration";
 export { Tag, TagSchema } from "./tag";
+export { Profile, ProfileSchema } from "./userprofile";
