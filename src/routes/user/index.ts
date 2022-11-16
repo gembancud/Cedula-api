@@ -23,13 +23,18 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const docProfile = await fastify.db.Profile.findOne({
         email: authUser.email,
       });
-      if (docProfile) {
-        return reply.status(200).send({
-          ...docProfile.toObject(),
-        });
-      } else {
+      if (!docProfile) {
         return reply.status(404).send({ error: "Profile not found" });
       }
+      const docListOrgs = await fastify.db.Registration.find({
+        email: authUser.email,
+      });
+      const orgs = docListOrgs.map((doc) => doc.org);
+
+      return reply.status(200).send({
+        ...docProfile.toObject(),
+        orgs,
+      });
     } catch (err) {
       return reply.status(401).send({ message: err });
     }
