@@ -66,7 +66,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       const profile = new fastify.db.Profile({
         name,
         email,
-        links: JSON.stringify(links),
+        links,
         contact_number,
         fbuid: authUser.uid,
       });
