@@ -26,10 +26,16 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!docProfile) {
         return reply.status(404).send({ error: "Profile not found" });
       }
-      const docListOrgs = await fastify.db.Registration.find({
+      const docListRegistrations = await fastify.db.Registration.find({
         email: authUser.email,
       });
-      const orgs = docListOrgs.map((doc) => doc.org);
+      const orgs = docListRegistrations.map((doc) => {
+        return {
+          org: doc.org,
+          active_badge: doc.active_badge,
+          badges: doc.badges,
+        };
+      });
 
       return reply.status(200).send({
         ...docProfile.toObject(),

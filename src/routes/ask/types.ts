@@ -10,7 +10,12 @@ const AskGetResponse = Type.Object({
   links: Type.Array(
     Type.Object({
       link: Type.String(),
-      orgs: Type.Array(Type.String()),
+      orgs: Type.Array(
+        Type.Object({
+          org: Type.String(),
+          badge_link: Type.String(),
+        })
+      ),
     })
   ),
 });

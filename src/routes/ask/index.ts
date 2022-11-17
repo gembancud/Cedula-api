@@ -2,6 +2,16 @@ import { FastifyPluginAsync } from "fastify";
 import { AskGetOptions, AskGetQuery } from "./types";
 import { SITES } from "../../utils/constants";
 
+interface linkType {
+  org: string;
+  badge_link: string;
+}
+
+interface badgeType {
+  name: string;
+  link: string;
+}
+
 const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get<{ Querystring: AskGetQuery }>(
     "/",
@@ -11,7 +21,7 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!SITES.includes(site)) return reply.badRequest("Invalid site");
 
       // Initialize map holding link and verified status
-      const tmpLink = new Map<string, string[] | null>();
+      const tmpLink = new Map<string, linkType[] | null>();
       for (const link of links) {
         tmpLink.set(link, null);
       }
@@ -25,14 +35,10 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       // Update map with cached links
       for (let i = 0; i < cache.length; i++) {
         if (cache[i] !== null) {
-          // const parsed: string[] = JSON.parse(cache[i]!);
-          console.log(
-            "intersection",
-            orgs.filter((org) => cache[i]!.includes(org))
-          );
+          const parsed_orgs: linkType[] = JSON.parse(cache[i]!);
           tmpLink.set(
             links[i],
-            orgs.filter((org) => cache[i]!.includes(org))
+            parsed_orgs.filter((org) => orgs.includes(org.org))
           );
         }
       }
@@ -51,6 +57,11 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
               link: { $in: dbLinks },
             });
             break;
+          case "reddit":
+            users = await fastify.db.RedditUser.find({
+              link: { $in: dbLinks },
+            });
+            break;
           case "fb":
           default:
             users = await fastify.db.FacebookUser.find({
@@ -60,15 +71,35 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         // Update map with database links
         // Also store in redis cache
         for (const user of users) {
+          // get all badges for each org of user
+          const registrations = await fastify.db.Registration.find({
+            name: user.name,
+          });
+          const allOrgsOfUser: linkType[] = registrations.map((reg) => {
+            const parsedBadges: badgeType[] = reg.badges as badgeType[];
+            let activeBadge = parsedBadges.find(
+              (badge) => badge.name === reg.active_badge
+            );
+            // if active badge is not found, set to default
+            if (activeBadge === undefined) {
+              activeBadge = parsedBadges.find(
+                (badge) => badge.name === "default"
+              );
+            }
+            return {
+              org: reg.org,
+              badge_link: activeBadge!.link,
+            };
+          });
           fastify.redis.set(
             `site:${site}:link:${user.link}`,
-            JSON.stringify(user.orgs),
+            JSON.stringify(allOrgsOfUser),
             "EX",
-            60 * 60 * 24
+            60 * 60 * 1
           );
           tmpLink.set(
             user.link,
-            orgs.filter((org) => user.orgs.includes(org))
+            allOrgsOfUser.filter((org) => orgs.includes(org.org))
           );
         }
       }
