@@ -4,7 +4,12 @@ const BaseVerify = Type.Object({
   id: Type.String(),
   name: Type.String(),
   email: Type.String({ format: "email" }),
-  links: Type.String(),
+  links: Type.Array(
+    Type.Object({
+      link: Type.String(),
+      site: Type.String(),
+    })
+  ),
   org: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),

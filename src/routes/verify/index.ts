@@ -36,7 +36,11 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             email: docRegistration.email,
           });
           if (docProfile) {
-            return { ...docProfile.toObject(), ...docRegistration.toObject() };
+            return {
+              id: docProfile.email,
+              ...docProfile.toObject(),
+              ...docRegistration.toObject(),
+            };
           } else {
             return reply.status(404).send({ error: "Profile not found" });
           }
@@ -71,6 +75,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
         if (docProfile) {
           return reply.status(200).send({
+            id: docProfile.email,
             ...docProfile.toObject(),
             ...docRegistration.toObject(),
           });
