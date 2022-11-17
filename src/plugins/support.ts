@@ -18,6 +18,8 @@ import {
   TagSchema,
   TwitterUser,
   TwitterUserSchema,
+  Badge,
+  BadgeSchema,
 } from "../schemas";
 import * as mongoose from "mongoose";
 import fastifyJwt from "@fastify/jwt";
@@ -66,6 +68,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
         Evaluation: conn.model("Evaluation", EvaluationSchema),
         Tag: conn.model("Tag", TagSchema),
         Org: conn.model("Org", OrgSchema),
+        Badge: conn.model("Badge", BadgeSchema),
       });
       return conn;
     })
@@ -111,6 +114,7 @@ declare module "fastify" {
       Evaluation: mongoose.Model<Evaluation>;
       Tag: mongoose.Model<Tag>;
       Org: mongoose.Model<Org>;
+      Badge: mongoose.Model<Badge>;
     };
   }
   interface FastifyRequest {}
