@@ -1,11 +1,8 @@
 import { Type, Static } from "@sinclair/typebox";
 
 const RegisterPostRequest = Type.Object({
-  name: Type.String(),
   email: Type.String({ format: "email" }),
-  contact_number: Type.String(),
   org: Type.String(),
-  links: Type.Array(Type.Object({ link: Type.String(), site: Type.String() })),
   captchaToken: Type.String(),
 });
 
@@ -16,12 +13,8 @@ const UploadRequest = Type.Object({
 });
 
 const BaseRegister = {
-  name: Type.String(),
   email: Type.String({ format: "email" }),
-  links: Type.String(),
-  contact_number: Type.String(),
   org: Type.String(),
-  fbuid: Type.String(),
   createdAt: Type.String(),
   updatedAt: Type.String(),
   documents: Type.Array(Type.String()),

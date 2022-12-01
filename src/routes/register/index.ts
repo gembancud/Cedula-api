@@ -28,8 +28,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/",
     RegisterPostOptions,
     async function (request, reply) {
-      const { name, email, contact_number, links, org, captchaToken } =
-        request.body;
+      const { email, org, captchaToken } = request.body;
       let authUser;
       try {
         const token = request.headers.authorization;
@@ -39,9 +38,20 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(401).send({ message: err });
       }
 
+      if (authUser.email !== email) {
+        return reply
+          .status(401)
+          .send({ message: "Cannot POST with different email" });
+      }
+
       const captcha = await hcaptchaVerify(captchaToken);
       if (!captcha)
         return reply.status(401).send({ message: "Captcha Unauthorized" });
+
+      const existingprofile = await fastify.db.Profile.findOne({ email });
+      if (!existingprofile) {
+        return reply.status(409).send({ message: "Profile does not exist" });
+      }
 
       const existingregistration = await fastify.db.Registration.findOne({
         email,
@@ -51,10 +61,6 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(409).send({ message: "Registration exists" });
       }
 
-      const existingprofile = await fastify.db.Profile.findOne({ email });
-      if (existingprofile) {
-        return reply.status(409).send({ message: "Profile already exists" });
-      }
       const dbEvaluators = await fastify.db.Evaluator.aggregate([
         { $sample: { size: 1 } },
       ]);
@@ -62,20 +68,6 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       for (const evaluator of dbEvaluators) {
         evaluators.push(evaluator.email);
       }
-
-      const profile = new fastify.db.Profile({
-        name,
-        email,
-        links,
-        contact_number,
-        fbuid: authUser.uid,
-      });
-
-      profile.save((err, profile) => {
-        if (err || !profile) {
-          return reply.internalServerError("Create profile failed");
-        }
-      });
 
       const registration = new fastify.db.Registration({
         email,
@@ -92,66 +84,65 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       // PROTOTYPE STEP: Automatically adds facebookuser upon registration
       // this bypasses registration step temporarily.
       // TODO: Remove this step when registration and verification is complete
-      const splicedFbLink = links[0].link.split("/").slice(-1)[0];
-      const facebookUser = new fastify.db.FacebookUser({
-        name,
-        email,
-        orgs: [org],
-        link: splicedFbLink,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-      });
-      facebookUser.save((err, user) => {
-        if (err || !user) {
-          console.log(err);
-        }
-      });
-      const fbLink = `site:fb:link:${splicedFbLink}`;
-      fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
-
-      if (links.length > 1) {
-        const splicedTwitterLink = links[1].link.split("/").slice(-1)[0];
-        const twitterUser = new fastify.db.TwitterUser({
-          name,
-          email,
-          orgs: [org],
-          link: splicedTwitterLink,
-          createdAt: Date.now(),
-          expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-        });
-        twitterUser.save((err, user) => {
-          if (err || !user) {
-            console.log(err);
-          }
-        });
-        const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
-        fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
-      }
-
-      if (links.length > 2) {
-        const splicedRedditLink = links[2].link.split("/").slice(-1)[0];
-        const redditUser = new fastify.db.RedditUser({
-          name,
-          email,
-          orgs: [org],
-          link: splicedRedditLink,
-          createdAt: Date.now(),
-          expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-        });
-        redditUser.save((err, user) => {
-          if (err || !user) {
-            console.log(err);
-          }
-        });
-        const redditLink = `site:reddit:link:${splicedRedditLink}`;
-        fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
-      }
-
+      // const splicedFbLink = links[0].link.split("/").slice(-1)[0];
+      // const facebookUser = new fastify.db.FacebookUser({
+      //   name,
+      //   email,
+      //   orgs: [org],
+      //   link: splicedFbLink,
+      //   createdAt: Date.now(),
+      //   expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+      // });
+      // facebookUser.save((err, user) => {
+      //   if (err || !user) {
+      //     console.log(err);
+      //   }
+      // });
+      // const fbLink = `site:fb:link:${splicedFbLink}`;
+      // fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
+      //
+      // if (links.length > 1) {
+      //   const splicedTwitterLink = links[1].link.split("/").slice(-1)[0];
+      //   const twitterUser = new fastify.db.TwitterUser({
+      //     name,
+      //     email,
+      //     orgs: [org],
+      //     link: splicedTwitterLink,
+      //     createdAt: Date.now(),
+      //     expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+      //   });
+      //   twitterUser.save((err, user) => {
+      //     if (err || !user) {
+      //       console.log(err);
+      //     }
+      //   });
+      //   const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
+      //   fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
+      // }
+      //
+      // if (links.length > 2) {
+      //   const splicedRedditLink = links[2].link.split("/").slice(-1)[0];
+      //   const redditUser = new fastify.db.RedditUser({
+      //     name,
+      //     email,
+      //     orgs: [org],
+      //     link: splicedRedditLink,
+      //     createdAt: Date.now(),
+      //     expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+      //   });
+      //   redditUser.save((err, user) => {
+      //     if (err || !user) {
+      //       console.log(err);
+      //     }
+      //   });
+      //   const redditLink = `site:reddit:link:${splicedRedditLink}`;
+      //   fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
+      // }
+      //
       // END OF PROTOTOYPE STEP
 
       const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({
-        ...profile.toObject(),
         ...registration.toObject(),
         cloudinary,
       });

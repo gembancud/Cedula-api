@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
-import { UserGetMeOptions } from "./types";
+import { hcaptchaVerify } from "../../utils/hcaptcha";
+import { UserGetMeOptions, UserPostBody, UserPostOptions } from "./types";
 
 const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.addHook("onRequest", async (request, reply) => {
@@ -45,6 +46,89 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       return reply.status(401).send({ message: err });
     }
   });
+
+  fastify.post<{ Body: UserPostBody }>(
+    "/",
+    UserPostOptions,
+    async function (request, reply) {
+      const { name, email, contact_number, links, captchaToken } = request.body;
+      let authUser;
+      try {
+        const token = request.headers.authorization;
+        authUser = await fastify.verifyFbAuth(token!);
+      } catch (err) {
+        console.log(err);
+        return reply.status(401).send({ message: err });
+      }
+
+      const captcha = await hcaptchaVerify(captchaToken);
+      if (!captcha)
+        return reply.status(401).send({ message: "Captcha Unauthorized" });
+
+      const docProfile = await fastify.db.Profile.findOne({
+        email,
+      });
+      if (docProfile) {
+        return reply.status(409).send({ message: "Profile already exists" });
+      }
+
+      const profile = new fastify.db.Profile({
+        name,
+        email,
+        links,
+        contact_number,
+        fbuid: authUser.uid,
+      });
+
+      profile.save((err, profile) => {
+        if (err || !profile) {
+          return reply.internalServerError("Create profile failed");
+        }
+      });
+
+      return reply.status(201).send({
+        ...profile.toObject(),
+      });
+    }
+  );
+
+  fastify.patch<{ Body: UserPostBody }>(
+    "/",
+    UserPostOptions,
+    async function (request, reply) {
+      const { name, email, contact_number, links, captchaToken } = request.body;
+      let authUser;
+      try {
+        const token = request.headers.authorization;
+        authUser = await fastify.verifyFbAuth(token!);
+      } catch (err) {
+        console.log(err);
+        return reply.status(401).send({ message: err });
+      }
+
+      if (authUser.email !== email) {
+        return reply
+          .status(401)
+          .send({ message: "Error cannot modify different account" });
+      }
+
+      const captcha = await hcaptchaVerify(captchaToken);
+      if (!captcha)
+        return reply.status(401).send({ message: "Captcha Unauthorized" });
+
+      const profile = await fastify.db.Profile.findOneAndUpdate(
+        { email, fbuid: authUser.uid },
+        { $set: { name, email, links, contact_number } }
+      );
+      if (!profile) {
+        return reply.status(404).send({ message: "Profile not found" });
+      }
+
+      return reply.status(201).send({
+        ...profile.toObject(),
+      });
+    }
+  );
 };
 
 export default user;

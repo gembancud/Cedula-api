@@ -1,4 +1,4 @@
-import { Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 
 const UserGetMeResponse = Type.Object({
   name: Type.String(),
@@ -24,6 +24,22 @@ const UserGetMeResponse = Type.Object({
   ),
 });
 
+const BaseUser = {
+  name: Type.String(),
+  email: Type.String({ format: "email" }),
+  contact_number: Type.String(),
+  links: Type.Array(Type.Object({ link: Type.String(), site: Type.String() })),
+};
+
+const UserPostRequest = Type.Object({
+  ...BaseUser,
+  captchaToken: Type.String(),
+});
+
+const UserPostResponse = Type.Object({
+  ...BaseUser,
+});
+
 export const UserGetMeOptions = {
   schema: {
     response: {
@@ -31,3 +47,14 @@ export const UserGetMeOptions = {
     },
   },
 };
+
+export const UserPostOptions = {
+  schema: {
+    body: UserPostRequest,
+    response: {
+      201: UserPostResponse,
+    },
+  },
+};
+
+export type UserPostBody = Static<typeof UserPostRequest>;
