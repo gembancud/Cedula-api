@@ -19,6 +19,11 @@ const BaseVerify = Type.Object({
   evaluators: Type.Array(Type.String()),
 });
 
+export type LinkType = {
+  link: string;
+  site: string;
+};
+
 const VerifyGetResponse = Type.Array(BaseVerify);
 
 const VerifyGetOneParams = Type.Object({
