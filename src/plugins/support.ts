@@ -26,12 +26,20 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
 
 import fastifyRedis from "@fastify/redis";
+import type { LinkType } from "../routes/verify/types";
 
 import { auth } from "../utils/initFirebase";
 import { DecodedIdToken } from "firebase-admin/auth";
 
 export interface SupportPluginOptions {
   // Specify Support plugin options here
+}
+
+interface SetUserLinksInterface {
+  email: string;
+  org?: string;
+  links: LinkType[];
+  upsert?: boolean; // if true, creates users if they don't exist
 }
 
 // The use of fastify-plugin is required to be able
@@ -93,6 +101,133 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     }
   });
 
+  fastify.decorate(
+    "SetUserLinks",
+    async ({ email, org, links, upsert }: SetUserLinksInterface) => {
+      const profile = await fastify.db.Profile.findOne({
+        email: email,
+      }).lean();
+      if (!profile) {
+        throw new Error("Profile not found");
+      }
+      for (const link of links) {
+        switch (link.site) {
+          case "fb":
+            const splicedFbLink = link.link.split("/").slice(-1)[0];
+            const fbUser = await fastify.db.FacebookUser.findOne({
+              email: profile.email,
+            });
+            if (fbUser) {
+              await fastify.db.FacebookUser.updateOne(
+                { email: profile.email },
+                {
+                  $push: {
+                    orgs: org,
+                  },
+                  $set: {
+                    name: profile.name,
+                    link: splicedFbLink,
+                  },
+                }
+              );
+            } else if (upsert) {
+              const facebookUser = new fastify.db.FacebookUser({
+                name: profile.name,
+                email: profile.email,
+                orgs: [org],
+                link: splicedFbLink,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              });
+              facebookUser.save((err, user) => {
+                if (err || !user) {
+                  console.log(err);
+                }
+              });
+              const fbLink = `site:fb:link:${splicedFbLink}`;
+              fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
+            }
+
+            break;
+
+          case "twitter":
+            const splicedTwitterLink = link.link.split("/").slice(-1)[0];
+            const twitterUser = await fastify.db.TwitterUser.findOne({
+              email: profile.email,
+            });
+            if (twitterUser) {
+              await fastify.db.TwitterUser.updateOne(
+                { email: profile.email },
+                {
+                  $push: {
+                    orgs: org,
+                  },
+                  $set: {
+                    name: profile.name,
+                    link: splicedTwitterLink,
+                  },
+                }
+              );
+            } else if (upsert) {
+              const twitterUser = new fastify.db.TwitterUser({
+                name: profile.name,
+                email: profile.email,
+                orgs: [org],
+                link: splicedTwitterLink,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              });
+              twitterUser.save((err, user) => {
+                if (err || !user) {
+                  console.log(err);
+                }
+              });
+              const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
+              fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
+            }
+            break;
+
+          case "reddit":
+            const splicedRedditLink = link.link.split("/").slice(-1)[0];
+            const redditUser = await fastify.db.RedditUser.findOne({
+              email: profile.email,
+            });
+            if (redditUser) {
+              await fastify.db.RedditUser.updateOne(
+                { email: profile.email },
+                {
+                  $push: {
+                    orgs: org,
+                  },
+                  $set: {
+                    link: splicedRedditLink,
+                    name: profile.name,
+                  },
+                }
+              );
+            } else if (upsert) {
+              const redditUser = new fastify.db.RedditUser({
+                name: profile.name,
+                email: profile.email,
+                orgs: [org],
+                link: splicedRedditLink,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              });
+              redditUser.save((err, user) => {
+                if (err || !user) {
+                  console.log(err);
+                }
+              });
+              const redditLink = `site:reddit:link:${splicedRedditLink}`;
+              fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
+            }
+            break;
+        }
+      }
+    }
+  );
+
   fastify.register(fastifyRedis, {
     host: process.env.REDIS_HOST!,
     port: 6379,
@@ -104,6 +239,7 @@ declare module "fastify" {
   export interface FastifyInstance {
     generateJwt: (email: string, idtoken: string) => string;
     verifyFbAuth: (token: string) => any;
+    SetUserLinks: ({}: SetUserLinksInterface) => Promise<void>;
     db: {
       Profile: mongoose.Model<Profile>;
       FacebookUser: mongoose.Model<FacebookUser>;

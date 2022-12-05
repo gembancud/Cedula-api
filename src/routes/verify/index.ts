@@ -143,124 +143,124 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
                   },
                 }
               );
-
+              fastify.SetUserLinks({ email, org, links, upsert: true });
               // For each link registered in the profile, add the org to the list of orgs
               // ie, FacebookUser for profile has org pushed to orgs array
-              for (const link of links) {
-                switch (link.site) {
-                  case "fb":
-                    const splicedFbLink = link.link.split("/").slice(-1)[0];
-                    const fbUser = await fastify.db.FacebookUser.findOne({
-                      email: profile.email,
-                    });
-                    if (fbUser) {
-                      await fastify.db.FacebookUser.updateOne(
-                        { email: profile.email },
-                        {
-                          $push: {
-                            orgs: org,
-                          },
-                        }
-                      );
-                    } else {
-                      const facebookUser = new fastify.db.FacebookUser({
-                        name: profile.name,
-                        email: profile.email,
-                        orgs: [org],
-                        link: splicedFbLink,
-                        createdAt: Date.now(),
-                        expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-                      });
-                      facebookUser.save((err, user) => {
-                        if (err || !user) {
-                          console.log(err);
-                        }
-                      });
-                      const fbLink = `site:fb:link:${splicedFbLink}`;
-                      fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
-                    }
-
-                    break;
-
-                  case "twitter":
-                    const splicedTwitterLink = link.link
-                      .split("/")
-                      .slice(-1)[0];
-                    const twitterUser = await fastify.db.TwitterUser.findOne({
-                      email: profile.email,
-                    });
-                    if (twitterUser) {
-                      await fastify.db.TwitterUser.updateOne(
-                        { email: profile.email },
-                        {
-                          $push: {
-                            orgs: org,
-                          },
-                        }
-                      );
-                    } else {
-                      const twitterUser = new fastify.db.TwitterUser({
-                        name: profile.name,
-                        email: profile.email,
-                        orgs: [org],
-                        link: splicedTwitterLink,
-                        createdAt: Date.now(),
-                        expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-                      });
-                      twitterUser.save((err, user) => {
-                        if (err || !user) {
-                          console.log(err);
-                        }
-                      });
-                      const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
-                      fastify.redis.set(
-                        twitterLink,
-                        `[${org}]`,
-                        "EX",
-                        60 * 60 * 24
-                      );
-                    }
-                    break;
-
-                  case "reddit":
-                    const splicedRedditLink = link.link.split("/").slice(-1)[0];
-                    const redditUser = await fastify.db.RedditUser.findOne({
-                      email: profile.email,
-                    });
-                    if (redditUser) {
-                      await fastify.db.RedditUser.updateOne(
-                        { email: profile.email },
-                        {
-                          $push: {
-                            orgs: org,
-                          },
-                        }
-                      );
-                    } else {
-                      const redditUser = new fastify.db.RedditUser({
-                        name: profile.name,
-                        email: profile.email,
-                        orgs: [org],
-                        link: splicedRedditLink,
-                        createdAt: Date.now(),
-                        expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-                      });
-                      redditUser.save((err, user) => {
-                        if (err || !user) {
-                          console.log(err);
-                        }
-                      });
-                      const redditLink = `site:reddit:link:${splicedRedditLink}`;
-                      fastify.redis.set(
-                        redditLink,
-                        `[${org}]`,
-                        "EX",
-                        60 * 60 * 24
-                      );
-                    }
-                    break;
-                }
-              }
+              // for (const link of links) {
+              //   switch (link.site) {
+              //     case "fb":
+              //       const splicedFbLink = link.link.split("/").slice(-1)[0];
+              //       const fbUser = await fastify.db.FacebookUser.findOne({
+              //         email: profile.email,
+              //       });
+              //       if (fbUser) {
+              //         await fastify.db.FacebookUser.updateOne(
+              //           { email: profile.email },
+              //           {
+              //             $push: {
+              //               orgs: org,
+              //             },
+              //           }
+              //         );
+              //       } else {
+              //         const facebookUser = new fastify.db.FacebookUser({
+              //           name: profile.name,
+              //           email: profile.email,
+              //           orgs: [org],
+              //           link: splicedFbLink,
+              //           createdAt: Date.now(),
+              //           expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              //         });
+              //         facebookUser.save((err, user) => {
+              //           if (err || !user) {
+              //             console.log(err);
+              //           }
+              //         });
+              //         const fbLink = `site:fb:link:${splicedFbLink}`;
+              //         fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
+              //       }
+              //
+              //       break;
+              //
+              //     case "twitter":
+              //       const splicedTwitterLink = link.link
+              //         .split("/")
+              //         .slice(-1)[0];
+              //       const twitterUser = await fastify.db.TwitterUser.findOne({
+              //         email: profile.email,
+              //       });
+              //       if (twitterUser) {
+              //         await fastify.db.TwitterUser.updateOne(
+              //           { email: profile.email },
+              //           {
+              //             $push: {
+              //               orgs: org,
+              //             },
+              //           }
+              //         );
+              //       } else {
+              //         const twitterUser = new fastify.db.TwitterUser({
+              //           name: profile.name,
+              //           email: profile.email,
+              //           orgs: [org],
+              //           link: splicedTwitterLink,
+              //           createdAt: Date.now(),
+              //           expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              //         });
+              //         twitterUser.save((err, user) => {
+              //           if (err || !user) {
+              //             console.log(err);
+              //           }
+              //         });
+              //         const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
+              //         fastify.redis.set(
+              //           twitterLink,
+              //           `[${org}]`,
+              //           "EX",
+              //           60 * 60 * 24
+              //         );
+              //       }
+              //       break;
+              //
+              //     case "reddit":
+              //       const splicedRedditLink = link.link.split("/").slice(-1)[0];
+              //       const redditUser = await fastify.db.RedditUser.findOne({
+              //         email: profile.email,
+              //       });
+              //       if (redditUser) {
+              //         await fastify.db.RedditUser.updateOne(
+              //           { email: profile.email },
+              //           {
+              //             $push: {
+              //               orgs: org,
+              //             },
+              //           }
+              //         );
+              //       } else {
+              //         const redditUser = new fastify.db.RedditUser({
+              //           name: profile.name,
+              //           email: profile.email,
+              //           orgs: [org],
+              //           link: splicedRedditLink,
+              //           createdAt: Date.now(),
+              //           expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
+              //         });
+              //         redditUser.save((err, user) => {
+              //           if (err || !user) {
+              //             console.log(err);
+              //           }
+              //         });
+              //         const redditLink = `site:reddit:link:${splicedRedditLink}`;
+              //         fastify.redis.set(
+              //           redditLink,
+              //           `[${org}]`,
+              //           "EX",
+              //           60 * 60 * 24
+              //         );
+              //       }
+              //       break;
+              //   }
+              // }
             } else {
               await fastify.db.Registration.updateOne(
                 { email: email, org },
