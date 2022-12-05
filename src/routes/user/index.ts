@@ -66,7 +66,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(401).send({ message: "Captcha Unauthorized" });
 
       const docProfile = await fastify.db.Profile.findOne({
-        email,
+        fbuid: authUser.uid,
       });
       if (docProfile) {
         return reply.status(409).send({ message: "Profile already exists" });
@@ -117,12 +117,13 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(401).send({ message: "Captcha Unauthorized" });
 
       const profile = await fastify.db.Profile.findOneAndUpdate(
-        { email, fbuid: authUser.uid },
+        { fbuid: authUser.uid },
         { $set: { name, email, links, contact_number } }
       );
       if (!profile) {
         return reply.status(404).send({ message: "Profile not found" });
       }
+      fastify.SetUserLinks({ email, links });
 
       return reply.status(201).send({
         ...profile.toObject(),
