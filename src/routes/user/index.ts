@@ -21,25 +21,34 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     try {
       const token = request.headers.authorization;
       const authUser = await fastify.verifyFbAuth(token!);
-      const docProfile = await fastify.db.Profile.findOne({
+      const profile = await fastify.db.Profile.findOne({
         email: authUser.email,
-      });
-      if (!docProfile) {
+      }).lean();
+      if (!profile) {
         return reply.status(404).send({ error: "Profile not found" });
       }
-      const docListRegistrations = await fastify.db.Registration.find({
+      const registrationList = await fastify.db.Registration.find({
         email: authUser.email,
-      });
-      const orgs = docListRegistrations.map((doc) => {
-        return {
-          org: doc.org,
-          active_badge: doc.active_badge,
-          badges: doc.badges,
-        };
-      });
+      }).lean();
+
+      let orgs = [];
+      for (const registration of registrationList) {
+        const org = await fastify.db.Org.findOne({
+          name: registration.org,
+        }).lean();
+        if (!org) {
+          return reply
+            .status(404)
+            .send({ error: `Registration for org ${org} is invalid` });
+        }
+        orgs.push({
+          ...registration,
+          ...org,
+        });
+      }
 
       return reply.status(200).send({
-        ...docProfile.toObject(),
+        ...profile,
         orgs,
       });
     } catch (err) {

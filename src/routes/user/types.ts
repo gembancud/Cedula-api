@@ -1,4 +1,18 @@
 import { Static, Type } from "@sinclair/typebox";
+import { org } from "../org/types";
+
+const MeOrg = {
+  ...org,
+  active_badge: Type.String(),
+  status: Type.String(),
+  documents: Type.Array(Type.String()),
+  badges: Type.Array(
+    Type.Object({
+      name: Type.String(),
+      link: Type.String(),
+    })
+  ),
+};
 
 const UserGetMeResponse = Type.Object({
   name: Type.String(),
@@ -10,18 +24,7 @@ const UserGetMeResponse = Type.Object({
     })
   ),
   contact_number: Type.String(),
-  orgs: Type.Array(
-    Type.Object({
-      org: Type.String(),
-      active_badge: Type.String(),
-      badges: Type.Array(
-        Type.Object({
-          name: Type.String(),
-          link: Type.String(),
-        })
-      ),
-    })
-  ),
+  orgs: Type.Array(Type.Object(MeOrg)),
 });
 
 const BaseUser = {

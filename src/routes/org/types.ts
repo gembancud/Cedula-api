@@ -1,6 +1,6 @@
 import { Static, Type } from "@sinclair/typebox";
 
-const org = Type.Object({
+export const org = {
   name: Type.String(),
   image: Type.String(),
   badge: Type.String(),
@@ -8,21 +8,13 @@ const org = Type.Object({
   requirements: Type.String(),
   createdAt: Type.String(),
   access: Type.String(),
-});
+};
 
 const OrgGetResponse = Type.Object({
-  orgs: Type.Array(org),
+  orgs: Type.Array(Type.Object(org)),
 });
 
 export const OrgGetOptions = {
-  schema: {
-    response: {
-      200: OrgGetResponse,
-    },
-  },
-};
-
-export const OrgGetMeOptions = {
   schema: {
     response: {
       200: OrgGetResponse,
