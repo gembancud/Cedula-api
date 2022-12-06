@@ -6,6 +6,7 @@ export interface Org {
   image: string;
   default_badge_link: string;
   description: string;
+  requirements: string;
   createdAt: Date;
   access: string;
   evaluatorcount: number;
@@ -16,6 +17,7 @@ export const OrgSchema = new Schema<Org>({
   image: { type: String, required: true },
   default_badge_link: { type: String, required: true },
   description: { type: String },
+  requirements: { type: String },
   createdAt: { type: Date, default: Date.now },
   access: { type: String, required: true },
   evaluatorcount: { type: Number, default: 1 },

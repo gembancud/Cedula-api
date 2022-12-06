@@ -1,10 +1,11 @@
-import { Type } from "@sinclair/typebox";
+import { Static, Type } from "@sinclair/typebox";
 
 const org = Type.Object({
   name: Type.String(),
   image: Type.String(),
   badge: Type.String(),
   description: Type.String(),
+  requirements: Type.String(),
   createdAt: Type.String(),
   access: Type.String(),
 });
@@ -28,3 +29,25 @@ export const OrgGetMeOptions = {
     },
   },
 };
+
+const OrgPostRequest = Type.Object({
+  password: Type.String(),
+  name: Type.String(),
+  image: Type.String(),
+  badge: Type.String(),
+  description: Type.String(),
+  requirements: Type.String(),
+  access: Type.String(),
+  evaluatorcount: Type.Number(),
+});
+
+export const OrgPostOptions = {
+  schema: {
+    body: OrgPostRequest,
+    response: {
+      201: Type.String(),
+    },
+  },
+};
+
+export type OrgPostBody = Static<typeof OrgPostRequest>;
