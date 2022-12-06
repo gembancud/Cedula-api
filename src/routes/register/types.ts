@@ -52,7 +52,7 @@ export const RegisterPostOptions = {
 export const RegisterGetOptions = {
   schema: {
     response: {
-      201: RegisterGetResponse,
+      200: RegisterGetResponse,
     },
   },
 };

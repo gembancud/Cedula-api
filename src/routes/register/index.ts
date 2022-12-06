@@ -81,66 +81,6 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         }
       });
 
-      // PROTOTYPE STEP: Automatically adds facebookuser upon registration
-      // this bypasses registration step temporarily.
-      // TODO: Remove this step when registration and verification is complete
-      // const splicedFbLink = links[0].link.split("/").slice(-1)[0];
-      // const facebookUser = new fastify.db.FacebookUser({
-      //   name,
-      //   email,
-      //   orgs: [org],
-      //   link: splicedFbLink,
-      //   createdAt: Date.now(),
-      //   expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-      // });
-      // facebookUser.save((err, user) => {
-      //   if (err || !user) {
-      //     console.log(err);
-      //   }
-      // });
-      // const fbLink = `site:fb:link:${splicedFbLink}`;
-      // fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
-      //
-      // if (links.length > 1) {
-      //   const splicedTwitterLink = links[1].link.split("/").slice(-1)[0];
-      //   const twitterUser = new fastify.db.TwitterUser({
-      //     name,
-      //     email,
-      //     orgs: [org],
-      //     link: splicedTwitterLink,
-      //     createdAt: Date.now(),
-      //     expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-      //   });
-      //   twitterUser.save((err, user) => {
-      //     if (err || !user) {
-      //       console.log(err);
-      //     }
-      //   });
-      //   const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
-      //   fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
-      // }
-      //
-      // if (links.length > 2) {
-      //   const splicedRedditLink = links[2].link.split("/").slice(-1)[0];
-      //   const redditUser = new fastify.db.RedditUser({
-      //     name,
-      //     email,
-      //     orgs: [org],
-      //     link: splicedRedditLink,
-      //     createdAt: Date.now(),
-      //     expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
-      //   });
-      //   redditUser.save((err, user) => {
-      //     if (err || !user) {
-      //       console.log(err);
-      //     }
-      //   });
-      //   const redditLink = `site:reddit:link:${splicedRedditLink}`;
-      //   fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
-      // }
-      //
-      // END OF PROTOTOYPE STEP
-
       const cloudinary = await genCloudinaryRequest(org);
       return reply.status(201).send({
         ...registration.toObject(),
