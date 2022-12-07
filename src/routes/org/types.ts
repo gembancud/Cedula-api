@@ -8,6 +8,7 @@ export const org = {
   requirements: Type.String(),
   createdAt: Type.String(),
   access: Type.String(),
+  website: Type.String(),
 };
 
 const OrgGetResponse = Type.Object({
@@ -30,6 +31,7 @@ const OrgPostRequest = Type.Object({
   description: Type.String(),
   requirements: Type.String(),
   access: Type.String(),
+  website: Type.String(),
   evaluatorcount: Type.Number(),
 });
 

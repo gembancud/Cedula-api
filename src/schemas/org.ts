@@ -10,6 +10,7 @@ export interface Org {
   createdAt: Date;
   access: string;
   evaluatorcount: number;
+  website: string;
 }
 
 export const OrgSchema = new Schema<Org>({
@@ -21,4 +22,5 @@ export const OrgSchema = new Schema<Org>({
   createdAt: { type: Date, default: Date.now },
   access: { type: String, required: true },
   evaluatorcount: { type: Number, default: 1 },
+  website: { type: String },
 });

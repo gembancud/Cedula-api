@@ -21,6 +21,7 @@ const org: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           description,
           requirements,
           evaluatorcount,
+          website,
         } = request.body;
 
         if (password !== process.env.ADMIN_PASSWORD)
@@ -42,6 +43,7 @@ const org: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           description,
           requirements,
           evaluatorcount,
+          website,
         });
         org.save((err, org) => {
           if (err || !org) {
