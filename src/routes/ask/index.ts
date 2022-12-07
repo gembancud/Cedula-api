@@ -55,25 +55,25 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           case "twitter":
             users = await fastify.db.TwitterUser.find({
               link: { $in: dbLinks },
-            });
+            }).lean();
             break;
           case "reddit":
             users = await fastify.db.RedditUser.find({
               link: { $in: dbLinks },
-            });
+            }).lean();
             break;
           case "fb":
           default:
             users = await fastify.db.FacebookUser.find({
               link: { $in: dbLinks },
-            });
+            }).lean();
         }
         // Update map with database links
         // Also store in redis cache
         for (const user of users) {
           // get all badges for each org of user
           const registrations = await fastify.db.Registration.find({
-            name: user.name,
+            email: user.email,
           });
           const allOrgsOfUser: linkType[] = registrations.map((reg) => {
             const parsedBadges: badgeType[] = reg.badges as badgeType[];

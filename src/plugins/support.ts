@@ -42,6 +42,10 @@ interface SetUserLinksInterface {
   upsert?: boolean; // if true, creates users if they don't exist
 }
 
+interface ClearUserCacheInterface {
+  email: string;
+}
+
 // The use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 export default fp<SupportPluginOptions>(async (fastify, opts) => {
@@ -228,6 +232,30 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
     }
   );
 
+  fastify.decorate(
+    "ClearUserCache",
+    async ({ email }: ClearUserCacheInterface) => {
+      const fbUser = await fastify.db.FacebookUser.findOne({
+        email,
+      }).lean();
+      if (fbUser) {
+        fastify.redis.del(`site:fb:link:${fbUser.link}`);
+      }
+      const twitterUser = await fastify.db.TwitterUser.findOne({
+        email,
+      }).lean();
+      if (twitterUser) {
+        fastify.redis.del(`site:twitter:link:${twitterUser.link}`);
+      }
+      const redditUser = await fastify.db.RedditUser.findOne({
+        email,
+      }).lean();
+      if (redditUser) {
+        fastify.redis.del(`site:reddit:link:${redditUser.link}`);
+      }
+    }
+  );
+
   fastify.register(fastifyRedis, {
     host: process.env.REDIS_HOST!,
     port: 6379,
@@ -240,6 +268,7 @@ declare module "fastify" {
     generateJwt: (email: string, idtoken: string) => string;
     verifyFbAuth: (token: string) => any;
     SetUserLinks: ({}: SetUserLinksInterface) => Promise<void>;
+    ClearUserCache: ({}: ClearUserCacheInterface) => Promise<void>;
     db: {
       Profile: mongoose.Model<Profile>;
       FacebookUser: mongoose.Model<FacebookUser>;

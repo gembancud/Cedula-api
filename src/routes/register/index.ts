@@ -183,6 +183,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             },
           }
         );
+        await fastify.ClearUserCache({ email: authUser.email });
       } catch (err) {
         return reply.status(401).send({ error: err });
       }
