@@ -65,5 +65,31 @@ export const UploadOptions = {
   },
 };
 
+const RegisterPatchParams = Type.Object({
+  org: Type.String(),
+});
+
+const RegisterPatchRequest = Type.Object({
+  badges: Type.Array(
+    Type.Object({
+      name: Type.String(),
+      link: Type.String(),
+    })
+  ),
+  active_badge: Type.String(),
+});
+
+export const RegisterPatchOptions = {
+  schema: {
+    params: RegisterPatchParams,
+    body: RegisterPatchRequest,
+    response: {
+      200: RegisterGetResponse,
+    },
+  },
+};
+
 export type RegisterBody = Static<typeof RegisterPostRequest>;
 export type UploadBody = Static<typeof UploadRequest>;
+export type RegisterPatchParams = Static<typeof RegisterPatchParams>;
+export type RegisterPatchBody = Static<typeof RegisterPatchRequest>;

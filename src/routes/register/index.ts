@@ -2,6 +2,9 @@ import { FastifyPluginAsync } from "fastify";
 import {
   RegisterBody,
   RegisterGetOptions,
+  RegisterPatchBody,
+  RegisterPatchOptions,
+  RegisterPatchParams,
   RegisterPostOptions,
   UploadBody,
   UploadOptions,
@@ -69,10 +72,27 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         evaluators.push(evaluator.email);
       }
 
+      const defaultBadge = await fastify.db.Badge.findOne({
+        name: "default",
+        org,
+      }).lean();
+      if (!defaultBadge) {
+        return reply.status(409).send({
+          message: "Default badge does not exist. Please contact support",
+        });
+      }
+
       const registration = new fastify.db.Registration({
         email,
         org,
         evaluators: evaluators,
+        badges: [
+          {
+            name: "default",
+            link: defaultBadge!.link,
+          },
+        ],
+        active_badge: "default",
       });
 
       registration.save((err, user) => {
@@ -132,6 +152,40 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         ...profile?.toObject(),
         ...newRegistration!.toObject(),
       });
+    }
+  );
+
+  fastify.patch<{ Params: RegisterPatchParams; Body: RegisterPatchBody }>(
+    "/:org",
+    RegisterPatchOptions,
+    async function (request, reply) {
+      try {
+        const org = request.params.org;
+        const { active_badge, badges } = request.body;
+
+        const token = request.headers.authorization;
+        const authUser = await fastify.verifyFbAuth(token!);
+        const profile = await fastify.db.Profile.findOne({
+          email: authUser.email,
+        }).lean();
+        if (!profile) {
+          return reply.status(404).send({ error: "Profile not found" });
+        }
+        await fastify.db.Registration.findOneAndUpdate(
+          {
+            email: authUser.email,
+            org,
+          },
+          {
+            $set: {
+              active_badge,
+              badges,
+            },
+          }
+        );
+      } catch (err) {
+        return reply.status(401).send({ error: err });
+      }
     }
   );
 };
