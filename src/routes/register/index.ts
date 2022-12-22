@@ -41,21 +41,25 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(401).send({ message: err });
       }
 
+      // check if input email is token's email
       if (authUser.email !== email) {
         return reply
           .status(401)
           .send({ message: "Cannot POST with different email" });
       }
 
+      // verify captcha
       const captcha = await hcaptchaVerify(captchaToken);
       if (!captcha)
         return reply.status(401).send({ message: "Captcha Unauthorized" });
 
+      // check if user exists
       const existingprofile = await fastify.db.Profile.findOne({ email });
       if (!existingprofile) {
         return reply.status(409).send({ message: "Profile does not exist" });
       }
 
+      // check if user is already registered
       const existingregistration = await fastify.db.Registration.findOne({
         email,
         org,
@@ -64,7 +68,9 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         return reply.status(409).send({ message: "Registration exists" });
       }
 
+      // prepare evaluators
       const dbEvaluators = await fastify.db.Evaluator.aggregate([
+        { $match: { org } },
         { $sample: { size: 1 } },
       ]);
       const evaluators: string[] = [];
@@ -72,6 +78,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         evaluators.push(evaluator.email);
       }
 
+      // Setup up default badge inside registration
       const defaultBadge = await fastify.db.Badge.findOne({
         name: "default",
         org,
@@ -82,6 +89,7 @@ const register: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         });
       }
 
+      // Create registration
       const registration = new fastify.db.Registration({
         email,
         org,
