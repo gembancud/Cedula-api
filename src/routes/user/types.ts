@@ -14,25 +14,22 @@ const MeOrg = {
   ),
 };
 
-const UserGetMeResponse = Type.Object({
-  name: Type.String(),
-  email: Type.String(),
-  links: Type.Array(
-    Type.Object({
-      link: Type.String(),
-      site: Type.String(),
-    })
-  ),
-  contact_number: Type.String(),
-  orgs: Type.Array(Type.Object(MeOrg)),
-});
+const BaseLink = {
+  link: Type.String(),
+  site: Type.String(),
+};
 
 const BaseUser = {
   name: Type.String(),
   email: Type.String({ format: "email" }),
   contact_number: Type.String(),
-  links: Type.Array(Type.Object({ link: Type.String(), site: Type.String() })),
+  links: Type.Array(Type.Object(BaseLink)),
 };
+
+const UserGetMeResponse = Type.Object({
+  ...BaseUser,
+  orgs: Type.Array(Type.Object(MeOrg)),
+});
 
 const UserPostRequest = Type.Object({
   ...BaseUser,
