@@ -27,8 +27,9 @@ const Evaluator: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         const evaluator = await fastify.db.Evaluator.find({
           email: authUser.email,
         }).lean();
-        if (!evaluator) {
-          return reply.status(401).send({ message: "Evaluator not found" });
+
+        if (evaluator.length === 0) {
+          return reply.status(404).send({ message: "Evaluator not found" });
         }
 
         return reply.status(200).send(evaluator);
