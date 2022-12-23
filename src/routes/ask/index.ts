@@ -2,15 +2,15 @@ import { FastifyPluginAsync } from "fastify";
 import { AskGetOptions, AskGetQuery } from "./types";
 import { SITES } from "../../utils/constants";
 
-interface linkType {
+type linkType = {
   org: string;
-  badge_link: string;
-}
+  link: string;
+};
 
-interface badgeType {
+type badgeType = {
   name: string;
   link: string;
-}
+};
 
 const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get<{ Querystring: AskGetQuery }>(
@@ -88,7 +88,7 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
             }
             return {
               org: reg.org,
-              badge_link: activeBadge!.link,
+              link: activeBadge!.link,
             };
           });
           fastify.redis.set(
@@ -121,6 +121,7 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         link,
         orgs: tmpOrgs ?? [],
       }));
+      console.log("outLink", outLink);
 
       return reply.status(200).send({ links: outLink });
     }

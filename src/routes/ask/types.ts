@@ -13,7 +13,7 @@ const AskGetResponse = Type.Object({
       orgs: Type.Array(
         Type.Object({
           org: Type.String(),
-          badge_link: Type.String(),
+          link: Type.String(),
         })
       ),
     })
