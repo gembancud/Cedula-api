@@ -1,10 +1,11 @@
 import { Schema } from "mongoose";
+import { LinkType } from "../routes/verify/types";
 
 export interface Profile {
   _id: string;
   name: string;
   email: string;
-  links: object[];
+  links: LinkType[];
   contact_number: string;
   fbuid: string;
   createdAt: Date;

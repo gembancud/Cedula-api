@@ -26,7 +26,6 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCors from "@fastify/cors";
 
 import fastifyRedis from "@fastify/redis";
-import type { LinkType } from "../routes/verify/types";
 
 import { auth } from "../utils/initFirebase";
 import { DecodedIdToken } from "firebase-admin/auth";
@@ -37,8 +36,6 @@ export interface SupportPluginOptions {
 
 interface SetUserLinksInterface {
   email: string;
-  org?: string;
-  links: LinkType[];
   upsert?: boolean; // if true, creates users if they don't exist
 }
 
@@ -107,14 +104,46 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
 
   fastify.decorate(
     "SetUserLinks",
-    async ({ email, org, links, upsert }: SetUserLinksInterface) => {
+    async ({ email, upsert }: SetUserLinksInterface) => {
       const profile = await fastify.db.Profile.findOne({
         email: email,
       }).lean();
       if (!profile) {
         throw new Error("Profile not found");
       }
-      for (const link of links) {
+      const acceptedOrgs = await fastify.db.Registration.find({
+        email: email,
+        status: "accepted",
+      }).lean();
+      const orgs = acceptedOrgs.map((org) => org.org);
+      console.log("serUserLinks orgs", orgs);
+
+      for (const link of profile.links) {
+        if (link.link === "") {
+          switch (link.site) {
+            case "fb":
+              fastify.db.FacebookUser.findOne({
+                email: profile.email,
+              })
+                .remove()
+                .exec();
+              break;
+            case "twitter":
+              fastify.db.TwitterUser.findOne({
+                email: profile.email,
+              })
+                .remove()
+                .exec();
+              break;
+            case "reddit":
+              fastify.db.RedditUser.findOne({
+                email: profile.email,
+              })
+                .remove()
+                .exec();
+              break;
+          }
+        }
         switch (link.site) {
           case "fb":
             const splicedFbLink = link.link.split("/").slice(-1)[0];
@@ -125,10 +154,8 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               await fastify.db.FacebookUser.updateOne(
                 { email: profile.email },
                 {
-                  $push: {
-                    orgs: org,
-                  },
                   $set: {
+                    orgs,
                     name: profile.name,
                     link: splicedFbLink,
                   },
@@ -138,7 +165,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               const facebookUser = new fastify.db.FacebookUser({
                 name: profile.name,
                 email: profile.email,
-                orgs: [org],
+                orgs,
                 link: splicedFbLink,
                 createdAt: Date.now(),
                 expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
@@ -149,7 +176,12 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
                 }
               });
               const fbLink = `site:fb:link:${splicedFbLink}`;
-              fastify.redis.set(fbLink, `[${org}]`, "EX", 60 * 60 * 24);
+              fastify.redis.set(
+                fbLink,
+                JSON.stringify(orgs),
+                "EX",
+                60 * 60 * 24
+              );
             }
 
             break;
@@ -163,10 +195,8 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               await fastify.db.TwitterUser.updateOne(
                 { email: profile.email },
                 {
-                  $push: {
-                    orgs: org,
-                  },
                   $set: {
+                    orgs,
                     name: profile.name,
                     link: splicedTwitterLink,
                   },
@@ -176,7 +206,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               const twitterUser = new fastify.db.TwitterUser({
                 name: profile.name,
                 email: profile.email,
-                orgs: [org],
+                orgs,
                 link: splicedTwitterLink,
                 createdAt: Date.now(),
                 expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
@@ -187,7 +217,12 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
                 }
               });
               const twitterLink = `site:twitter:link:${splicedTwitterLink}`;
-              fastify.redis.set(twitterLink, `[${org}]`, "EX", 60 * 60 * 24);
+              fastify.redis.set(
+                twitterLink,
+                JSON.stringify(orgs),
+                "EX",
+                60 * 60 * 24
+              );
             }
             break;
 
@@ -200,10 +235,8 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               await fastify.db.RedditUser.updateOne(
                 { email: profile.email },
                 {
-                  $push: {
-                    orgs: org,
-                  },
                   $set: {
+                    orgs,
                     link: splicedRedditLink,
                     name: profile.name,
                   },
@@ -213,7 +246,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
               const redditUser = new fastify.db.RedditUser({
                 name: profile.name,
                 email: profile.email,
-                orgs: [org],
+                orgs,
                 link: splicedRedditLink,
                 createdAt: Date.now(),
                 expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 365,
@@ -224,7 +257,12 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
                 }
               });
               const redditLink = `site:reddit:link:${splicedRedditLink}`;
-              fastify.redis.set(redditLink, `[${org}]`, "EX", 60 * 60 * 24);
+              fastify.redis.set(
+                redditLink,
+                JSON.stringify(orgs),
+                "EX",
+                60 * 60 * 24
+              );
             }
             break;
         }
@@ -282,5 +320,4 @@ declare module "fastify" {
       Badge: mongoose.Model<Badge>;
     };
   }
-  interface FastifyRequest {}
 }

@@ -132,7 +132,7 @@ const user: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       if (!profile) {
         return reply.status(404).send({ message: "Profile not found" });
       }
-      fastify.SetUserLinks({ email, links });
+      fastify.SetUserLinks({ email, upsert: true });
 
       return reply.status(201).send({
         ...profile.toObject(),

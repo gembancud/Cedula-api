@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
 import {
-  LinkType,
   VerifyGetOneOptions,
   VerifyGetOneParams,
   VerifyGetOptions,
@@ -111,7 +110,6 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
         if (!profile) {
           return reply.status(404).send({ message: "Profile not found" });
         }
-        const links = profile.links as LinkType[];
 
         const prevEvaluation = await fastify.db.Evaluation.findOne({
           email,
@@ -143,7 +141,7 @@ const verify: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
                   },
                 }
               );
-              fastify.SetUserLinks({ email, org, links, upsert: true });
+              fastify.SetUserLinks({ email, upsert: true });
             } else {
               await fastify.db.Registration.updateOne(
                 { email: email, org },
