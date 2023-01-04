@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
-import { AskGetOptions, AskGetQuery } from "./types";
+import { AskGetOptions, AskGetQuery, ScopeEnum } from "./types";
 import { SITES } from "../../utils/constants";
 
 type linkType = {
@@ -17,7 +17,7 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     "/",
     AskGetOptions,
     async function (request, reply) {
-      const { site, links, orgs } = request.query;
+      const { site, links, orgs, scope } = request.query;
       if (!SITES.includes(site)) return reply.badRequest("Invalid site");
 
       // Initialize map holding link and verified status
@@ -38,7 +38,9 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           const parsed_orgs: linkType[] = JSON.parse(cache[i]!);
           tmpLink.set(
             links[i],
-            parsed_orgs.filter((org) => orgs.includes(org.org))
+            scope && scope === ScopeEnum.private
+              ? parsed_orgs.filter((org) => orgs.includes(org.org))
+              : parsed_orgs
           );
         }
       }
@@ -99,7 +101,9 @@ const ask: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
           );
           tmpLink.set(
             user.link,
-            allOrgsOfUser.filter((org) => orgs.includes(org.org))
+            scope && scope === ScopeEnum.private
+              ? allOrgsOfUser.filter((org) => orgs.includes(org.org))
+              : allOrgsOfUser
           );
         }
       }
